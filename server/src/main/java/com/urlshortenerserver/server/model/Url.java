@@ -1,9 +1,6 @@
 package com.urlshortenerserver.server.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,8 +16,10 @@ public class Url {
     private Long id;
 
     @NotNull
+    @Column(name = "url")
     private String url;
-    @NotNull
+
+    @Column(name = "code")
     private String code;
 
     /**
