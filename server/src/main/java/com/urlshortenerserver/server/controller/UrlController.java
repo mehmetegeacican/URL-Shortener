@@ -6,11 +6,13 @@ import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.request.UrlRequest;
 import com.urlshortenerserver.server.request.converter.UrlRequestConverter;
 import com.urlshortenerserver.server.service.UrlService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -67,10 +69,21 @@ public class UrlController {
     }
 
     @PostMapping
-    public ResponseEntity<?> postURL (@Valid @RequestBody UrlRequest urlRequest){
-        Url convertedUrl = urlRequestConverter.convertToEntity((urlRequest));
-        return new ResponseEntity<UrlDto>(
-                urlDtoConverter.convertToDto(service.createUrl(convertedUrl)), HttpStatus.CREATED
-        );
+    public ResponseEntity<UrlDto> postURL (@Valid @RequestBody UrlRequest urlRequest){
+        Url url = urlRequestConverter.convertToEntity(urlRequest);
+
+
+        // Check if ID is null, and if so, generate a new ID
+        if (url.getId() == null) {
+            url.setId(service.generateID()); // Replace with your custom ID generation logic
+        }
+
+        // Save the URL entity
+        Url createdUrl = service.create(url);
+
+        // Convert the created URL entity to DTO
+        UrlDto urlDto = urlDtoConverter.convertToDto(createdUrl);
+
+        return new ResponseEntity<>(urlDto, HttpStatus.CREATED);
     }
 }

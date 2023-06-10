@@ -16,8 +16,9 @@ public class UrlDtoConverter {
      * @return
      */
     public UrlDto convertToDto(Url urlParam){
+        Long idParam = (urlParam.getId() != null) ? urlParam.getId() : 0L;
         return UrlDto.builder().
-                id(urlParam.getId()).
+                id(idParam).
                 url(urlParam.getUrl()).
                 code(urlParam.getCode()).
                 build();

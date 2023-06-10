@@ -5,6 +5,7 @@ import com.urlshortenerserver.server.exception.CodeAlreadyExistsExceptiom;
 import com.urlshortenerserver.server.exception.UrlNotFoundException;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
 import org.springframework.stereotype.Service;
 
@@ -16,24 +17,32 @@ public class UrlService {
     private final UrlRepository urlRepository;
     private final RandomStringGenerator randomStringGenerator;
 
+    private final IdGenerator idGenerator;
 
-    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator) {
+    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator) {
         this.urlRepository = urlRepository;
         this.randomStringGenerator = randomStringGenerator;
+        this.idGenerator = idGenerator;
     }
 
-    public Url createUrl(Url url) {
-
-        if(url.getCode() == null  || url.getCode().isEmpty()){
-            url.setCode(generateCode());
-        } else if (urlRepository.findAllByCode(url.getCode()).isPresent()) {
-            throw new CodeAlreadyExistsExceptiom("Code already in use!");
+    public Url create(Url url) {
+        Url newUrl = url;
+        if (url.getId() == null) {
+            Long repoSize = this.urlRepository.count();
+            newUrl.setId(Long.valueOf(repoSize + 1));
         }
+            if (url.getCode() == null || url.getCode().isEmpty()) {
+                url.setCode(generateCode());
+            } else {
+                url.setCode(url.getCode().toUpperCase());
+            }
+            url.setCode(url.getCode().toUpperCase());
 
-        url.setCode(url.getCode().toUpperCase());
-        return urlRepository.save(url);
+
+        return this.urlRepository.save(url);
     }
-    
+
+
     public List<Url> getAllUrls() {
         return this.urlRepository.findAll();
     }
@@ -47,6 +56,11 @@ public class UrlService {
         do {
             code = randomStringGenerator.generateRandomString();
         }while (urlRepository.findAllByCode(code).isPresent());
-        return  code;
+        return code;
+    }
+
+    public Long generateID(){
+        Long repoSize = this.urlRepository.count();
+        return (Long) repoSize + 1;
     }
 }
