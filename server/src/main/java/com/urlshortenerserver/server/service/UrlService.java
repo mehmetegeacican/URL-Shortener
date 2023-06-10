@@ -26,19 +26,12 @@ public class UrlService {
     }
 
     public Url create(Url url) {
-        Url newUrl = url;
-        if (url.getId() == null) {
-            Long repoSize = this.urlRepository.count();
-            newUrl.setId(Long.valueOf(repoSize + 1));
-        }
-            if (url.getCode() == null || url.getCode().isEmpty()) {
-                url.setCode(generateCode());
-            } else {
-                url.setCode(url.getCode().toUpperCase());
-            }
+        if (url.getCode() == null || url.getCode().isEmpty()) {
+            url.setCode(generateCode());
+        } else {
             url.setCode(url.getCode().toUpperCase());
-
-
+        }
+        url.setCode(url.getCode().toUpperCase());
         return this.urlRepository.save(url);
     }
 
@@ -63,4 +56,6 @@ public class UrlService {
         Long repoSize = this.urlRepository.count();
         return (Long) repoSize + 1;
     }
+
+
 }
