@@ -13,8 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class UrlRequest {
+
     @NotNull
     private String url;
 
     private String code;
+
 }
