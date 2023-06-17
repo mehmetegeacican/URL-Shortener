@@ -17,4 +17,5 @@ public class UrlRequest {
     private String url;
 
     private String code;
+
 }
