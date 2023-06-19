@@ -21,6 +21,7 @@ class UrlServiceTest {
     @Mock
     private UrlRepository urlRepository;
 
+    @Mock
     private UrlService urlService;
 
     private RandomStringGenerator randomStringGenerator;
@@ -29,6 +30,9 @@ class UrlServiceTest {
 
     @BeforeEach
     void setUp(){
+        idGenerator = Mockito.mock(IdGenerator.class);
+        randomStringGenerator = Mockito.mock(RandomStringGenerator.class);
+        Mockito.when(randomStringGenerator.generateRandomString()).thenReturn("NonExisting");
         MockitoAnnotations.openMocks(this);
         urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator);
     }
@@ -76,5 +80,32 @@ class UrlServiceTest {
         assertEquals("Url not found",notFoundException.getMessage());
         //Verify
         Mockito.verify(urlRepository,Mockito.times(1)).findAllByCode(code);
+    }
+
+    @Test
+    void generateCode() {
+        //Given
+        String generatedCode = "generated";
+        Url testUrl = new Url(1l,"http://helloThere.com","generated");
+        //When
+        Mockito.when(urlRepository.findAllByCode(generatedCode)).thenReturn(Optional.of(testUrl));
+        Mockito.when(urlRepository.findAllByCode("NonExisting")).thenReturn(Optional.empty());
+        //Then
+        assertEquals("NonExisting",urlService.generateCode());
+        //Verify
+        Mockito.verify(urlRepository,Mockito.atLeastOnce()).findAllByCode("NonExisting");
+        Mockito.verify(randomStringGenerator,Mockito.atLeastOnce()).generateRandomString();
+    }
+
+    @Test
+    void generateID() {
+        //Given
+        Long testCount = 1l;
+        //When
+        Mockito.when(urlRepository.count()).thenReturn(testCount);
+        //Then
+        assertEquals(urlService.generateID(),testCount + 1);
+        //Verify
+        Mockito.verify(urlRepository,Mockito.times(1)).count();
     }
 }
