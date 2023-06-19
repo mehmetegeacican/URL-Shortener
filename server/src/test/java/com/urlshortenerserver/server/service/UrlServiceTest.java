@@ -108,4 +108,21 @@ class UrlServiceTest {
         //Verify
         Mockito.verify(urlRepository,Mockito.times(1)).count();
     }
+
+    @Test
+    void createwithNoCode() {
+        //Given
+        Url url1 = new Url(1l,"http://example.com",null);
+        String generatedTestCode = "GENERATED";
+        //When
+        Mockito.when(randomStringGenerator.generateRandomString()).thenReturn(generatedTestCode);
+        Mockito.when(urlRepository.save(url1)).thenReturn(url1);
+        Url result = urlService.create(url1);
+        //Then
+        assertEquals(generatedTestCode,url1.getCode());
+        assertEquals(result,url1);
+        //Verify
+        Mockito.verify(urlRepository,Mockito.times(1)).save(url1);
+        Mockito.verify(randomStringGenerator,Mockito.times(1)).generateRandomString();
+    }
 }

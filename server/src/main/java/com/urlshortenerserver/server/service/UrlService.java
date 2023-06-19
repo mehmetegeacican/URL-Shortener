@@ -28,8 +28,6 @@ public class UrlService {
     public Url create(Url url) {
         if (url.getCode() == null || url.getCode().isEmpty()) {
             url.setCode(generateCode());
-        } else {
-            url.setCode(url.getCode().toUpperCase());
         }
         url.setCode(url.getCode().toUpperCase());
         return this.urlRepository.save(url);
