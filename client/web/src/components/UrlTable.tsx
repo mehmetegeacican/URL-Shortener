@@ -1,4 +1,6 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow } from '@mui/material';
+import { IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow } from '@mui/material';
+import { ITabledata } from '../interfaces/interfaces';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 
 const COLUMNS: string[] = [
     "ID",
@@ -7,12 +9,25 @@ const COLUMNS: string[] = [
     "REDIRECT"
 ]
 
-const EXAMPLE_DATA:number[] = [1,2,3,4,5,6,7]
+const EXAMPLE_DATA:ITabledata[] = [
+    {
+        ID: 1,
+        URL: "http://localhost",
+        CODE:"B",
+        REDIRECT:null
+    },
+    {
+        ID: 2,
+        URL: "http://localhost",
+        CODE:"C",
+        REDIRECT:null
+    },
+]
 
 export default function UrlTable() {
     return (
-        <TableContainer component={Paper} sx={{mt:1}}>
-            <Table sx={{ minWidth: 750, px : 50 }} aria-label="url table">
+        <TableContainer component={Paper} sx={{mt:1, alignItems:"center"}}>
+            <Table sx={{ minWidth: 750 ,}} aria-label="url table">
                 <TableHead>
                     <TableRow>
                         {COLUMNS.map((col: string) => {
@@ -23,10 +38,16 @@ export default function UrlTable() {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {EXAMPLE_DATA.map((data:number) => {
+                    {EXAMPLE_DATA.map((data:ITabledata) => {
                         return(
-                            <TableRow>
-                                 <TableCell>{data}</TableCell>
+                            <TableRow key={data.ID}>
+                                 <TableCell>{data.ID}</TableCell>
+                                 <TableCell>{data.URL}</TableCell>
+                                 <TableCell>{data.CODE}</TableCell>
+                                 <TableCell>
+                                    <IconButton color="primary" >
+                                        <DoubleArrowIcon/>
+                                    </IconButton></TableCell>
                             </TableRow>
                            
                         )
