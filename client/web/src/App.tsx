@@ -12,9 +12,9 @@ function App() {
     <div>
       <ThemeProvider theme={defaultTheme}>
         <CssBaseline />
-        <Box sx={{ mt:  2,  display: 'flex', justifyContent: 'center' }}>
-            <Stack spacing={2} alignItems={"center"}>
-              <Container maxWidth= "md" sx={{alignItems:"center"}}>
+        <Box sx={{ mt:  2,}}>
+            <Stack spacing={2} >
+              <Container maxWidth= "md">
                 <UrlTable />
               </Container>
             </Stack>
