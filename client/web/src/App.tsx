@@ -11,13 +11,16 @@ function App() {
     <div>
       <ThemeProvider theme={defaultTheme}>
         <CssBaseline />
-        <Navbar />
-        <main>
-          <Box sx={{ display: 'flex', flexDirection: 'column'}}>
-            <Stack spacing={2}>
-              <UrlTable />
+        <Box sx={{ mt:  2,  display: 'flex', justifyContent: 'center' }}>
+            <Stack spacing={2} alignItems={"center"}>
+              <Container maxWidth= "md" sx={{alignItems:"center"}}>
+                <UrlTable />
+              </Container>
             </Stack>
           </Box>
+        <Navbar />
+        <main>
+          
         </main>
         <Footer />
       </ThemeProvider>
