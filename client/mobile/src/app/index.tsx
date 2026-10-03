@@ -30,7 +30,7 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.heroSection}>
           <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
+            Enter your URL to shorten it
           </ThemedText>
         </ThemedView>
       </SafeAreaView>
