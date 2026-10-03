@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
@@ -7,8 +7,19 @@ import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useCallback, useEffect, useState } from 'react';
+import { Url } from '@/types/url.type';
+import { urlService } from '@/service/url.service';
+import axios from 'axios';
+import { UrlList } from '@/components/ui/url-list';
+
 
 export default function TinyUrlsScreen() {
+
+  const [urls, setUrls] = useState<Url[]>([]);
+  const [error, setError] = useState<string | null>("");
+  const [loading, setLoading] = useState<boolean>(true);
+
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
     ...safeAreaInsets,
@@ -29,6 +40,30 @@ export default function TinyUrlsScreen() {
     },
   });
 
+
+
+  const load = useCallback(async () => {
+    try {
+      setError(null);
+      setUrls(await urlService.getAllUrls());
+
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        setError(
+          e.response
+            ? `Server error (${e.response.status})`
+            : "Can't reach the server. Check your Wi-Fi and API address."
+        );
+      } else {
+        setError("Something went wrong");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    load().finally(() => setLoading(false));
+  }, [load]);
+
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
@@ -36,59 +71,21 @@ export default function TinyUrlsScreen() {
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
-          {/* <ThemedText type="subtitle">Explore</ThemedText>
+          <ThemedText type="subtitle">Urls</ThemedText>
           <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText> */}
+            Below are the Urls recorded and the Codes generated for them. You can use the codes to access the original Urls.
+          </ThemedText>
         </ThemedView>
 
         <ThemedView style={styles.sectionsWrapper}>
-          {/* <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible> */}
-
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
+          <Collapsible title="Urls">
+            {loading ? (
+              <ActivityIndicator size="large" />
+            ) : error ? (
+              <ThemedText style={styles.centerText}>{error}</ThemedText>
+            ) : (
+              <UrlList urls={urls} />
+            )}
           </Collapsible>
         </ThemedView>
       </ThemedView>
