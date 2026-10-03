@@ -1,17 +1,17 @@
-import { Image } from 'expo-image';
+
 import { ActivityIndicator, Platform, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Url } from '@/types/url.type';
 import { urlService } from '@/service/url.service';
 import axios from 'axios';
 import { UrlList } from '@/components/ui/url-list';
+import { useFocusEffect } from 'expo-router';
 
 
 export default function TinyUrlsScreen() {
@@ -60,9 +60,11 @@ export default function TinyUrlsScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    load().finally(() => setLoading(false));
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      load().finally(() => setLoading(false));
+    }, [load])
+  );
 
   return (
     <ScrollView
