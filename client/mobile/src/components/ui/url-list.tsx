@@ -16,9 +16,10 @@ type CopyCellProps = {
   copied: boolean;
   onCopy: (value: string) => void;
   bold?: boolean;
+  copyRemoved?:boolean;
 };
 
-function CopyCell({ value, label, copied, onCopy, bold }: CopyCellProps) {
+function CopyCell({ value, label, copied, onCopy, bold, copyRemoved=false }: CopyCellProps) {
   return (
     <ThemedView style={styles.cellContent}>
       <ThemedText
@@ -27,14 +28,15 @@ function CopyCell({ value, label, copied, onCopy, bold }: CopyCellProps) {
         style={styles.cellText}>
         {label ?? value}
       </ThemedText>
-      <Pressable
+      {!copyRemoved && <Pressable
         onPress={() => onCopy(value)}
         hitSlop={8}
-        style={({ pressed }) => pressed && styles.pressed}>
+        style={({ pressed }) => pressed && styles.pressed}
+        >
         <ThemedText type="small" themeColor="textSecondary">
           {copied ? 'Copied ✓' : 'Copy'}
         </ThemedText>
-      </Pressable>
+      </Pressable>}
     </ThemedView>
   );
 }
@@ -81,6 +83,7 @@ export function UrlList({ urls }: Props) {
               value={item.url}
               copied={copiedKey === `url-${item.id}`}
               onCopy={(v) => handleCopy(`url-${item.id}`, v)}
+              copyRemoved={true}
             />
           </ThemedView>
           <ThemedView type="backgroundElement" style={styles.codeCol}>
