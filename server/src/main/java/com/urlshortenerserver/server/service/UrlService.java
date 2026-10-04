@@ -16,13 +16,15 @@ public class UrlService {
 
     private final UrlRepository urlRepository;
     private final RandomStringGenerator randomStringGenerator;
-
     private final IdGenerator idGenerator;
 
-    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator) {
+    private final CacheService cacheService;
+
+    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator, CacheService cacheService) {
         this.urlRepository = urlRepository;
         this.randomStringGenerator = randomStringGenerator;
         this.idGenerator = idGenerator;
+        this.cacheService = cacheService;
     }
 
     public Url create(Url url) {
@@ -41,7 +43,9 @@ public class UrlService {
             } while (urlRepository.existsByCode(generated));
             url.setCode(generated);
         }
-        return this.urlRepository.save(url);
+        Url saved = this.urlRepository.save(url);
+        cacheService.cacheUrl(saved.getCode(), saved.getUrl());
+        return saved;
     }
 
 
@@ -49,8 +53,23 @@ public class UrlService {
         return this.urlRepository.findAll();
     }
 
-    public Url getUrlByCode(String code) throws Exception{
-        return this.urlRepository.findAllByCode(code).orElseThrow(() -> new UrlNotFoundException("Url not found"));
+    public Url getUrlByCode(String code) throws Exception {
+        String normalizedCode = code.toUpperCase();
+
+        String cachedUrl = cacheService.getUrlFromCache(normalizedCode);
+        if (cachedUrl != null) {
+            Url cached = new Url();
+            cached.setCode(normalizedCode);
+            cached.setUrl(cachedUrl);
+            return cached;
+        }
+
+        Url url = this.urlRepository.findAllByCode(normalizedCode)
+                .orElseThrow(() -> new UrlNotFoundException("Url not found"));
+
+        cacheService.cacheUrl(normalizedCode, url.getUrl());
+
+        return url;
     }
 
     public String generateCode(){
