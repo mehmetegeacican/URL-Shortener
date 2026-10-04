@@ -7,6 +7,8 @@ import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +21,8 @@ public class UrlService implements IUrlService {
     private final IdGenerator idGenerator;
 
     private final CacheService cacheService;
+
+    private static final Logger logger = LoggerFactory.getLogger(UrlService.class);
 
     public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator, CacheService cacheService) {
         this.urlRepository = urlRepository;
@@ -58,6 +62,7 @@ public class UrlService implements IUrlService {
     @Override
     public Url getUrlByCode(String code) throws Exception {
         String normalizedCode = code.toUpperCase();
+        logger.debug("Attempting to fetch URL with code: {}", normalizedCode);
 
         String cachedUrl = cacheService.getUrlFromCache(normalizedCode);
         if (cachedUrl != null) {
@@ -67,6 +72,7 @@ public class UrlService implements IUrlService {
             return cached;
         }
 
+        logger.debug("Cache miss for code: {}, fetching from database", normalizedCode);
         Url url = this.urlRepository.findAllByCodeAndDeletedFalse(normalizedCode)
                 .orElseThrow(() -> new UrlNotFoundException("Url not found"));
 

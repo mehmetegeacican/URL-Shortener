@@ -1,5 +1,7 @@
 package com.urlshortenerserver.server.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -17,6 +19,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(GeneralExceptionHandler.class);
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
@@ -26,11 +29,13 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
             String errorMessage = x.getDefaultMessage();
             errors.put(fieldName,errorMessage);
         });
+        logger.warn("Validation failed: errors={}", errors);
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(UrlNotFoundException.class)
     public ResponseEntity<?> urlNotFoundException(UrlNotFoundException e){
+        logger.warn("URL not found: {}", e.getMessage());
         Map<String,String> errors = new HashMap<>();
         errors.put("error",e.getMessage());
         return new ResponseEntity<>(errors,HttpStatus.NOT_FOUND);
@@ -38,6 +43,7 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(CodeAlreadyExistsExceptiom.class)
     public ResponseEntity<?> codeAlreadyExists(CodeAlreadyExistsExceptiom e){
+        logger.warn("Short code already exists: {}", e.getMessage());
         Map<String,String> errors = new HashMap<>();
         errors.put("error",e.getMessage());
         return new ResponseEntity<>(errors,HttpStatus.CONFLICT);
