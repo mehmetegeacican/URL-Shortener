@@ -19,7 +19,7 @@ public class Url {
     private String url;
     private String code;
 
-    private String code;
+
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean deleted = false;
@@ -46,5 +46,13 @@ public class Url {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
