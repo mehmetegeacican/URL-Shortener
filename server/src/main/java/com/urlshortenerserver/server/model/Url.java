@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "url")
+@Table(name = "url", indexes = {
+        @Index(name = "idx_code", columnList = "code", unique = true)
+})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
