@@ -8,6 +8,7 @@ import { Spacing } from "@/constants/theme";
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
 import { ThemedText } from "../themed-text";
 import { CODE_MAX_LENGTH, validateCode } from "@/utils/code.validation";
+import { mapCreateUrlError } from "@/utils/api.error";
 
 type Props = {
     onCreated: (createdUrl: Url) => void;
@@ -48,16 +49,9 @@ export function UrlForm({ onCreated }: Props) {
             setUrl("");
             setCode("");
         } catch (e) {
-            if (axios.isAxiosError(e)) {
-                setError(
-                    e.response
-                        ? `Server error (${e.response.status})`
-                        : "Can't reach the server. Check your Wi-Fi and API address."
-                );
-            }
-            else {
-                setError("Failed to create URL");
-            }
+            const { codeError, generalError } = mapCreateUrlError(e);
+            setCodeError(codeError ?? null);
+            setError(generalError ?? null);
         } finally {
             setLoading(false);
         }
