@@ -11,11 +11,11 @@ const api = axios.create({
 
 export const urlService = {
   async getAllUrls(): Promise<Url[]> {
-    const response = await api.get<Url[]>("/");
+    const response = await api.get<Url[]>("/all");
     return response.data;
   },
-  async createUrl(url: string): Promise<Url> {
-    const response = await api.post<Url>("/", { url });
+  async createUrl(url: string, code?:string): Promise<Url> {
+    const response = await api.post<Url>("/create", { url , code : code || undefined });
     return response.data;
   },
 };

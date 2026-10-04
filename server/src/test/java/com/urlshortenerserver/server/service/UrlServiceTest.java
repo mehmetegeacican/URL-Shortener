@@ -1,5 +1,6 @@
 package com.urlshortenerserver.server.service;
 
+import com.urlshortenerserver.server.exception.CodeAlreadyExistsExceptiom;
 import com.urlshortenerserver.server.exception.UrlNotFoundException;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 class UrlServiceTest {
     @Mock
@@ -124,5 +126,61 @@ class UrlServiceTest {
         //Verify
         Mockito.verify(urlRepository,Mockito.times(1)).save(url1);
         Mockito.verify(randomStringGenerator,Mockito.times(1)).generateRandomString();
+    }
+
+
+    private Url buildUrl(String code) {
+        Url url = new Url();
+        url.setUrl("https://example.com");
+        url.setCode(code);
+        return url;
+    }
+
+    @Test
+    void createWithFreeCustomCodeSavesUppercasedCode() {
+        // Given
+
+        // When
+        Mockito.when(urlRepository.existsByCode("MYTEST1")).thenReturn(false);
+        Mockito.when(urlRepository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Url result = urlService.create(buildUrl("mytest1"));
+
+        assertEquals("MYTEST1", result.getCode());
+        assertEquals("https://example.com", result.getUrl());
+        Mockito.verify(urlRepository).existsByCode("MYTEST1");
+        Mockito.verify(urlRepository).save(result);
+    }
+
+    @Test
+    void createWithTakenCustomCodeThrowsAndDoesNotSave() {
+
+        // Given
+
+        // When
+        Mockito.when(urlRepository.existsByCode("TAKEN1")).thenReturn(true);
+
+        // Then
+        CodeAlreadyExistsExceptiom ex = assertThrows(
+                CodeAlreadyExistsExceptiom.class,
+                () -> urlService.create(buildUrl("taken1"))
+        );
+
+        assertTrue(ex.getMessage().contains("TAKEN1"));
+        Mockito.verify(urlRepository, Mockito.never()).save(any(Url.class));
+    }
+
+    @Test
+    void createChecksDuplicateAfterUppercasing() {
+        // Given
+
+        // When
+        Mockito.when(urlRepository.existsByCode("ABCD1")).thenReturn(true);
+        // Then
+        assertThrows(CodeAlreadyExistsExceptiom.class,
+                () -> urlService.create(buildUrl("abcd1")));
+
+        Mockito.verify(urlRepository).existsByCode("ABCD1");
+        Mockito.verify(urlRepository, Mockito.never()).existsByCode("abcd1");
     }
 }

@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.CONFLICT)
 public class CodeAlreadyExistsExceptiom extends RuntimeException {
     public CodeAlreadyExistsExceptiom(String message){
-        super(message);
+        super("Code already taken: " + message);
     }
 }
