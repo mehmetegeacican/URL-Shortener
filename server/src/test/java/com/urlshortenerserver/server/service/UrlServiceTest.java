@@ -30,13 +30,16 @@ class UrlServiceTest {
 
     private IdGenerator idGenerator;
 
+    @Mock
+    private CacheService cacheService;
+
     @BeforeEach
     void setUp(){
         idGenerator = Mockito.mock(IdGenerator.class);
         randomStringGenerator = Mockito.mock(RandomStringGenerator.class);
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn("NonExisting");
         MockitoAnnotations.openMocks(this);
-        urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator);
+        urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator, cacheService);
     }
 
     @Test
