@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "url")
+@Table(name = "url", indexes = {
+    @Index(name = "idx_code", columnList = "code", unique = true)
+})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,8 +16,8 @@ public class Url {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     private String url;
+    private String code;
 
     public Long getId() {
         return id;
@@ -33,7 +35,6 @@ public class Url {
         this.url = url;
     }
 
-
     public String getCode() {
         return code;
     }
@@ -41,5 +42,4 @@ public class Url {
     public void setCode(String code) {
         this.code = code;
     }
-    private String code;
 }
