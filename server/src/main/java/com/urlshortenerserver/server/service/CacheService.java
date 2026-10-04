@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 
 @Service
-public class CacheService {
+public class CacheService implements ICacheService {
     private static final String REDIRECT_CACHE_PREFIX = "redirect:";
     private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
@@ -17,19 +17,19 @@ public class CacheService {
         this.redisTemplate = redisTemplate;
     }
 
+    @Override
     public String getUrlFromCache(String code) {
         return redisTemplate.opsForValue().get(buildCacheKey(code));
     }
 
+    @Override
     public void cacheUrl(String code, String url) {
         redisTemplate.opsForValue().set(buildCacheKey(code), url, CACHE_TTL);
     }
 
+    @Override
     public void invalidateCache(String code) {
         redisTemplate.delete(buildCacheKey(code));
     }
 
-    private String buildCacheKey(String code) {
-        return REDIRECT_CACHE_PREFIX + code.toUpperCase();
-    }
 }

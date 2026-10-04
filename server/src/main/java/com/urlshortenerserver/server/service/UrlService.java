@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class UrlService {
+public class UrlService implements IUrlService {
 
     private final UrlRepository urlRepository;
     private final RandomStringGenerator randomStringGenerator;
@@ -27,6 +27,7 @@ public class UrlService {
         this.cacheService = cacheService;
     }
 
+    @Override
     public Url create(Url url) {
         boolean isCustomCode = url.getCode() != null && !url.getCode().isEmpty();
         if (isCustomCode) {
@@ -49,10 +50,12 @@ public class UrlService {
     }
 
 
+    @Override
     public List<Url> getAllUrls() {
         return this.urlRepository.findAll();
     }
 
+    @Override
     public Url getUrlByCode(String code) throws Exception {
         String normalizedCode = code.toUpperCase();
 
@@ -72,6 +75,7 @@ public class UrlService {
         return url;
     }
 
+    @Override
     public void deleteUrl(String code) throws Exception {
         String normalizedCode = code.toUpperCase();
 
@@ -84,6 +88,7 @@ public class UrlService {
         cacheService.invalidateCache(normalizedCode);
     }
 
+    @Override
     public String generateCode(){
         String code = "";
         do {
@@ -92,6 +97,7 @@ public class UrlService {
         return code;
     }
 
+    @Override
     public Long generateID(){
         Long repoSize = this.urlRepository.count();
         return (Long) repoSize + 1;
