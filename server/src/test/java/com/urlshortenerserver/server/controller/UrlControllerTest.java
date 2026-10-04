@@ -65,8 +65,8 @@ class UrlControllerTest {
     @Test
     void getAllUrls() throws Exception {
         //Given
-        Url url1 = new Url(1l,"http://helloThere.com","test1");
-        Url url2 = new Url(2l,"http://hellorThere.com","test2");
+        Url url1 = new Url(1l,"http://helloThere.com","test1",false);
+        Url url2 = new Url(2l,"http://hellorThere.com","test2",false);
         List<Url> testList = new ArrayList<>(Arrays.asList(url1,url2));
         List<UrlDto> expectedDtoList = new ArrayList<>();
         expectedDtoList.add(dtoConverter.convertToDto(url1));
@@ -87,7 +87,7 @@ class UrlControllerTest {
     @Test
     void getUrlByCode() throws Exception {
         //Given
-        Url url1 = new Url(1l,"http://helloThere.com","test1");
+        Url url1 = new Url(1l,"http://helloThere.com","test1",false);
         UrlDto urlDto = dtoConverter.convertToDto(url1);
         //When
         Mockito.when(urlService.getUrlByCode("test1")).thenReturn(url1);
@@ -102,7 +102,7 @@ class UrlControllerTest {
     void redirect() throws Exception {
         //Given
         String code = "test";
-        Url url = new Url(1l,"http://example.com","test");
+        Url url = new Url(1l,"http://example.com","test",false);
         URI uri = new URI(url.getUrl());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(uri);
@@ -119,7 +119,7 @@ class UrlControllerTest {
     void postURL() throws Exception {
         //Given
         UrlRequest request = UrlRequest.builder().url("http://example.com").build();
-        Url createdUrl = new Url(null,"http://example.com","test");
+        Url createdUrl = new Url(null,"http://example.com","test",false);
         UrlDto createdUrlDto = new UrlDto(2l,"http://example.com","test");
         //When
         Mockito.when(requestConverter.convertToEntity(request)).thenReturn(createdUrl);

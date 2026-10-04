@@ -59,32 +59,32 @@ class UrlServiceTest {
     @Test
     void getUrlByCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com","test",false);
-        String code = "test";
+        Url url1 = new Url(1l,"http://example.com","TEST",false);
+        String code = "TEST";
         //When
-        Mockito.when(urlRepository.findAllByCode("test")).thenReturn(Optional.of(url1));
+        Mockito.when(urlRepository.findAllByCodeAndDeletedFalse("TEST")).thenReturn(Optional.of(url1));
         //Then
         assertDoesNotThrow(() -> {
             Url urlResult = urlService.getUrlByCode(code);
             assertEquals(urlResult,url1);
         });
         //Verify
-        Mockito.verify(urlRepository,Mockito.times(1)).findAllByCode(code);
+        Mockito.verify(urlRepository,Mockito.times(1)).findAllByCodeAndDeletedFalse(code);
     }
 
     @Test
     void getUrlByCodeException() {
         //Given
-        String code = "nonExistent";
+        String code = "NONEXISTENT";
         //When
-        Mockito.when(urlRepository.findAllByCode("nonExistent")).thenReturn(Optional.empty());
+        Mockito.when(urlRepository.findAllByCodeAndDeletedFalse("NONEXISTENT")).thenReturn(Optional.empty());
         //Then
         UrlNotFoundException notFoundException = assertThrows(UrlNotFoundException.class, () -> {
             urlService.getUrlByCode(code);
         });
         assertEquals("Url not found",notFoundException.getMessage());
         //Verify
-        Mockito.verify(urlRepository,Mockito.times(1)).findAllByCode(code);
+        Mockito.verify(urlRepository,Mockito.times(1)).findAllByCodeAndDeletedFalse(code);
     }
 
     @Test
