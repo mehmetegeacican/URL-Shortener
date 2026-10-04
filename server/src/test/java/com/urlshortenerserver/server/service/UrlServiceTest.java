@@ -45,8 +45,8 @@ class UrlServiceTest {
     @Test
     void getAllUrls() {
         //Given
-        Url url1 = new Url(1L,"http://servicetest.com","test");
-        Url url2 = new Url(2l,"http://hellothere.com","test2");
+        Url url1 = new Url(1L,"http://servicetest.com","test",false);
+        Url url2 = new Url(2l,"http://hellothere.com","test2",false);
         List<Url> testUrls = Arrays.asList(url1, url2);
         //When
         Mockito.when(urlRepository.findAll()).thenReturn(testUrls);
@@ -59,7 +59,7 @@ class UrlServiceTest {
     @Test
     void getUrlByCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com","test");
+        Url url1 = new Url(1l,"http://example.com","test",false);
         String code = "test";
         //When
         Mockito.when(urlRepository.findAllByCode("test")).thenReturn(Optional.of(url1));
@@ -91,7 +91,7 @@ class UrlServiceTest {
     void generateCode() {
         //Given
         String generatedCode = "generated";
-        Url testUrl = new Url(1l,"http://helloThere.com","generated");
+        Url testUrl = new Url(1l,"http://helloThere.com","generated",false);
         //When
         Mockito.when(urlRepository.findAllByCode(generatedCode)).thenReturn(Optional.of(testUrl));
         Mockito.when(urlRepository.findAllByCode("NonExisting")).thenReturn(Optional.empty());
@@ -117,7 +117,7 @@ class UrlServiceTest {
     @Test
     void createwithNoCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com",null);
+        Url url1 = new Url(1l,"http://example.com",null,false);
         String generatedTestCode = "GENERATED";
         //When
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn(generatedTestCode);
