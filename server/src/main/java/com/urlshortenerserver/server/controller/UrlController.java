@@ -20,7 +20,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/v2")
 public class UrlController {
 
     private final UrlDtoConverter urlDtoConverter;
@@ -41,7 +41,7 @@ public class UrlController {
         this.service = service;
     }
 
-    @GetMapping("/")
+    @GetMapping("/all")
     public ResponseEntity<List<UrlDto>> getAllUrls(){
         return new ResponseEntity<List<UrlDto>>(
                 urlDtoConverter.convertToDto(service.getAllUrls()), HttpStatus.OK

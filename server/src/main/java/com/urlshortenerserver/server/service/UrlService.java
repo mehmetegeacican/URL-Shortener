@@ -26,10 +26,21 @@ public class UrlService {
     }
 
     public Url create(Url url) {
-        if (url.getCode() == null || url.getCode().isEmpty()) {
-            url.setCode(generateCode());
+        boolean isCustomCode = url.getCode() != null && !url.getCode().isEmpty();
+        if (isCustomCode) {
+            String code = url.getCode().toUpperCase();
+            if (urlRepository.existsByCode(code)) {
+                throw new CodeAlreadyExistsExceptiom(code);
+            }
+            url.setCode(code);
         }
-        url.setCode(url.getCode().toUpperCase());
+        else {
+            String generated;
+            do {
+                generated = generateCode().toUpperCase();
+            } while (urlRepository.existsByCode(generated));
+            url.setCode(generated);
+        }
         return this.urlRepository.save(url);
     }
 
