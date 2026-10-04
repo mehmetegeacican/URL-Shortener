@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { Url } from '@/types/url.type';
+import { confirmAction } from '@/utils/confirm';
+import { Ionicons } from '@expo/vector-icons';
+
 
 type Props = {
   urls: Url[];
+  onDelete: (url: Url) => Promise<void>; // NEW
 };
 
 type CopyCellProps = {
@@ -16,10 +20,10 @@ type CopyCellProps = {
   copied: boolean;
   onCopy: (value: string) => void;
   bold?: boolean;
-  copyRemoved?:boolean;
+  copyRemoved?: boolean;
 };
 
-function CopyCell({ value, label, copied, onCopy, bold, copyRemoved=false }: CopyCellProps) {
+function CopyCell({ value, label, copied, onCopy, bold, copyRemoved = false }: CopyCellProps) {
   return (
     <ThemedView style={styles.cellContent}>
       <ThemedText
@@ -28,21 +32,23 @@ function CopyCell({ value, label, copied, onCopy, bold, copyRemoved=false }: Cop
         style={styles.cellText}>
         {label ?? value}
       </ThemedText>
-      {!copyRemoved && <Pressable
-        onPress={() => onCopy(value)}
-        hitSlop={8}
-        style={({ pressed }) => pressed && styles.pressed}
-        >
-        <ThemedText type="small" themeColor="textSecondary">
-          {copied ? 'Copied ✓' : 'Copy'}
-        </ThemedText>
-      </Pressable>}
+      {!copyRemoved && (
+        <Pressable
+          onPress={() => onCopy(value)}
+          hitSlop={8}
+          style={({ pressed }) => pressed && styles.pressed}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {copied ? 'Copied ✓' : 'Copy'}
+          </ThemedText>
+        </Pressable>
+      )}
     </ThemedView>
   );
 }
 
-export function UrlList({ urls }: Props) {
+export function UrlList({ urls, onDelete }: Props) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null); // NEW
 
   const handleCopy = async (key: string, value: string) => {
     await Clipboard.setStringAsync(value);
@@ -50,6 +56,20 @@ export function UrlList({ urls }: Props) {
     setTimeout(() => {
       setCopiedKey((current) => (current === key ? null : current));
     }, 1500);
+  };
+
+  const handleDelete = async (item: Url) => {
+    const confirmed = await confirmAction(
+      'Delete link?',
+      `The code ${item.code} will stop working.`
+    );
+    if (!confirmed) return;
+    setDeletingId(item.id);
+    try {
+      await onDelete(item);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (urls.length === 0) {
@@ -70,6 +90,7 @@ export function UrlList({ urls }: Props) {
         <ThemedText type="smallBold" themeColor="textSecondary" style={styles.codeCol}>
           Code
         </ThemedText>
+        <ThemedView type="backgroundElement" style={styles.actionCol} />
       </ThemedView>
 
       {/* Data rows */}
@@ -94,6 +115,21 @@ export function UrlList({ urls }: Props) {
               copied={copiedKey === `code-${item.id}`}
               onCopy={(v) => handleCopy(`code-${item.id}`, v)}
             />
+          </ThemedView>
+          <ThemedView type="backgroundElement" style={styles.actionCol}>
+            <Pressable
+              onPress={() => handleDelete(item)}
+              disabled={deletingId === item.id}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={`Delete link ${item.code}`}
+              style={({ pressed }) => pressed && styles.pressed}>
+              {deletingId === item.id ? (
+                <ActivityIndicator size="small" color="#b91c1c" />
+              ) : (
+                <Ionicons name="trash-outline" size={20} color="#b91c1c" />
+              )}
+            </Pressable>
           </ThemedView>
         </ThemedView>
       ))}
@@ -126,6 +162,15 @@ const styles = StyleSheet.create({
   },
   codeCol: {
     flex: 1,
+  },
+  // NEW
+  actionCol: {
+    width: 56,
+    alignItems: 'flex-end',
+  },
+  // NEW
+  deleteText: {
+    color: '#b91c1c',
   },
   cellContent: {
     backgroundColor: 'transparent',

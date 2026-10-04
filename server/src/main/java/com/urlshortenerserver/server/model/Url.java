@@ -5,7 +5,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "url", indexes = {
-    @Index(name = "idx_code", columnList = "code", unique = true)
+        @Index(name = "idx_code", columnList = "code", unique = true)
 })
 @Builder
 @NoArgsConstructor
@@ -18,6 +18,11 @@ public class Url {
 
     private String url;
     private String code;
+
+    private String code;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
 
     public Long getId() {
         return id;

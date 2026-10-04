@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Url} from '@/types/url.type';
+import { Url } from '@/types/url.type';
 
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -14,8 +14,11 @@ export const urlService = {
     const response = await api.get<Url[]>("/all");
     return response.data;
   },
-  async createUrl(url: string, code?:string): Promise<Url> {
-    const response = await api.post<Url>("/create", { url , code : code || undefined });
+  async createUrl(url: string, code?: string): Promise<Url> {
+    const response = await api.post<Url>("/create", { url, code: code || undefined });
     return response.data;
+  },
+  async deleteUrl(code: string): Promise<void> {
+    await api.delete(`/delete/${code}`);
   },
 };

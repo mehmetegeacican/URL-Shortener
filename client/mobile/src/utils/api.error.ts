@@ -35,3 +35,14 @@ export function mapCreateUrlError(e: unknown): FormErrors {
       return { generalError: data?.error ?? `Server error (${status})` };
   }
 }
+
+export function mapDeleteUrlError(e: unknown): string {
+  if (!axios.isAxiosError(e)) return 'Failed to delete link';
+  if (!e.response) return NETWORK_MESSAGE;
+
+  const { status } = e.response;
+  const data = e.response.data as ErrorBody | undefined;
+
+  if (status === 404) return 'This link no longer exists.';
+  return data?.error ?? `Server error (${status})`;
+}

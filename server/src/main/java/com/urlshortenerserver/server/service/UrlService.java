@@ -12,19 +12,22 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class UrlService {
+public class UrlService implements IUrlService {
 
     private final UrlRepository urlRepository;
     private final RandomStringGenerator randomStringGenerator;
-
     private final IdGenerator idGenerator;
 
-    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator) {
+    private final CacheService cacheService;
+
+    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator, CacheService cacheService) {
         this.urlRepository = urlRepository;
         this.randomStringGenerator = randomStringGenerator;
         this.idGenerator = idGenerator;
+        this.cacheService = cacheService;
     }
 
+    @Override
     public Url create(Url url) {
         boolean isCustomCode = url.getCode() != null && !url.getCode().isEmpty();
         if (isCustomCode) {
@@ -41,18 +44,51 @@ public class UrlService {
             } while (urlRepository.existsByCode(generated));
             url.setCode(generated);
         }
-        return this.urlRepository.save(url);
+        Url saved = this.urlRepository.save(url);
+        cacheService.cacheUrl(saved.getCode(), saved.getUrl());
+        return saved;
     }
 
 
+    @Override
     public List<Url> getAllUrls() {
-        return this.urlRepository.findAll();
+        return this.urlRepository.findAllByDeletedFalse();
     }
 
-    public Url getUrlByCode(String code) throws Exception{
-        return this.urlRepository.findAllByCode(code).orElseThrow(() -> new UrlNotFoundException("Url not found"));
+    @Override
+    public Url getUrlByCode(String code) throws Exception {
+        String normalizedCode = code.toUpperCase();
+
+        String cachedUrl = cacheService.getUrlFromCache(normalizedCode);
+        if (cachedUrl != null) {
+            Url cached = new Url();
+            cached.setCode(normalizedCode);
+            cached.setUrl(cachedUrl);
+            return cached;
+        }
+
+        Url url = this.urlRepository.findAllByCodeAndDeletedFalse(normalizedCode)
+                .orElseThrow(() -> new UrlNotFoundException("Url not found"));
+
+        cacheService.cacheUrl(normalizedCode, url.getUrl());
+
+        return url;
     }
 
+    @Override
+    public void deleteUrl(String code) throws Exception {
+        String normalizedCode = code.toUpperCase();
+
+        Url url = this.urlRepository.findAllByCode(normalizedCode)
+                .orElseThrow(() -> new UrlNotFoundException("Url not found"));
+
+        url.setDeleted(true);
+        this.urlRepository.save(url);
+
+        cacheService.invalidateCache(normalizedCode);
+    }
+
+    @Override
     public String generateCode(){
         String code = "";
         do {
@@ -61,6 +97,7 @@ public class UrlService {
         return code;
     }
 
+    @Override
     public Long generateID(){
         Long repoSize = this.urlRepository.count();
         return (Long) repoSize + 1;
