@@ -15,7 +15,7 @@ export const urlService = {
     return response.data;
   },
   async createUrl(url: string, code?:string): Promise<Url> {
-    const response = await api.post<Url>("/", { url , code : code || undefined });
+    const response = await api.post<Url>("/create", { url , code : code || undefined });
     return response.data;
   },
 };

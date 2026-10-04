@@ -69,7 +69,7 @@ public class UrlController {
         );
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<UrlDto> postURL (@Valid @RequestBody UrlRequest urlRequest){
         Url url = urlRequestConverter.convertToEntity(urlRequest);
 
