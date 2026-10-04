@@ -19,6 +19,10 @@ public class Url {
 
     private String url;
 
+    private String code;
+
+    private boolean deleted = false;
+
     public Long getId() {
         return id;
     }
@@ -43,5 +47,13 @@ public class Url {
     public void setCode(String code) {
         this.code = code;
     }
-    private String code;
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
 }

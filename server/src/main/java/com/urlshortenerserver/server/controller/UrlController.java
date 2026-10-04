@@ -87,4 +87,11 @@ public class UrlController {
 
         return new ResponseEntity<>(urlDto, HttpStatus.CREATED);
     }
+
+
+    @DeleteMapping("/delete/{code}")
+    public ResponseEntity<Void> deleteUrl(@Valid @NotNull @PathVariable String code) throws Exception {
+        service.deleteUrl(code);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

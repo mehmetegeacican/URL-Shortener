@@ -64,12 +64,24 @@ public class UrlService {
             return cached;
         }
 
-        Url url = this.urlRepository.findAllByCode(normalizedCode)
+        Url url = this.urlRepository.findAllByCodeAndDeletedFalse(normalizedCode)
                 .orElseThrow(() -> new UrlNotFoundException("Url not found"));
 
         cacheService.cacheUrl(normalizedCode, url.getUrl());
 
         return url;
+    }
+
+    public void deleteUrl(String code) throws Exception {
+        String normalizedCode = code.toUpperCase();
+
+        Url url = this.urlRepository.findAllByCode(normalizedCode)
+                .orElseThrow(() -> new UrlNotFoundException("Url not found"));
+
+        url.setDeleted(true);
+        this.urlRepository.save(url);
+
+        cacheService.invalidateCache(normalizedCode);
     }
 
     public String generateCode(){
