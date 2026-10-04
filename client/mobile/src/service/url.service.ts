@@ -18,7 +18,7 @@ export const urlService = {
     const response = await api.post<Url>("/create", { url, code: code || undefined });
     return response.data;
   },
-  async deleteUrl(id: number): Promise<void> {
-    await api.delete(`/delete/${id}`);
+  async deleteUrl(code: string): Promise<void> {
+    await api.delete(`/delete/${code}`);
   },
 };

@@ -12,12 +12,14 @@ import { urlService } from '@/service/url.service';
 import axios from 'axios';
 import { UrlList } from '@/components/ui/url-list';
 import { useFocusEffect } from 'expo-router';
+import { mapDeleteUrlError } from '@/utils/api.error';
 
 
 export default function TinyUrlsScreen() {
 
   const [urls, setUrls] = useState<Url[]>([]);
   const [error, setError] = useState<string | null>("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const safeAreaInsets = useSafeAreaInsets();
@@ -39,6 +41,21 @@ export default function TinyUrlsScreen() {
       paddingBottom: Spacing.four,
     },
   });
+
+  const handleDelete = async (url: Url) => {
+    try {
+      setDeleteError(null);
+      await urlService.deleteUrl(url.code);
+      setUrls((prev) => prev.filter((u) => u.code !== url.code));
+    } catch (e) {
+      const message = mapDeleteUrlError(e);
+      setDeleteError(message);
+      // The link is already gone on the server, so drop it from the list too.
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
+        setUrls((prev) => prev.filter((u) => u.code !== url.code));
+      }
+    }
+  };
 
 
 
@@ -86,7 +103,7 @@ export default function TinyUrlsScreen() {
             ) : error ? (
               <ThemedText style={styles.centerText}>{error}</ThemedText>
             ) : (
-              <UrlList urls={urls} />
+              <UrlList urls={urls} onDelete={handleDelete} />
             )}
           </Collapsible>
         </ThemedView>
@@ -146,5 +163,10 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     alignSelf: 'center',
+  },
+  deleteError: {
+    color: '#b91c1c',
+    textAlign: 'center',
+    paddingBottom: Spacing.two,
   },
 });

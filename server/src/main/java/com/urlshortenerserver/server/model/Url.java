@@ -21,6 +21,7 @@ public class Url {
 
     private String code;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean deleted = false;
 
     public Long getId() {
