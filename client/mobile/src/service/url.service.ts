@@ -14,8 +14,8 @@ export const urlService = {
     const response = await api.get<Url[]>("/");
     return response.data;
   },
-  async createUrl(url: string): Promise<Url> {
-    const response = await api.post<Url>("/", { url });
+  async createUrl(url: string, code?:string): Promise<Url> {
+    const response = await api.post<Url>("/", { url , code : code || undefined });
     return response.data;
   },
 };

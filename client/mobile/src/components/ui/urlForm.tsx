@@ -1,5 +1,5 @@
 import { Url } from "@/types/url.type";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { urlService } from "@/service/url.service";
 import axios from "axios";
@@ -15,6 +15,8 @@ type Props = {
 export function UrlForm({ onCreated }: Props) {
     const theme = useTheme();
     const [url, setUrl] = useState<string>("");
+    const [code, setCode] = useState<string>("");
+    const codeInputRef = useRef<TextInput>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,9 +31,10 @@ export function UrlForm({ onCreated }: Props) {
         try {
             setError(null);
             setLoading(true);
-            const createdUrl = await urlService.createUrl(trimmed);
+            const createdUrl = await urlService.createUrl(trimmed, code.trim());
             onCreated(createdUrl);
             setUrl("");
+            setCode("");
         } catch (e) {
             if (axios.isAxiosError(e)) {
                 setError(
@@ -64,6 +67,19 @@ export function UrlForm({ onCreated }: Props) {
                 editable={!loading}
                 onSubmitEditing={handleSubmit}
                 returnKeyType="go"
+            />
+            <TextInput
+                ref={codeInputRef}
+                style={[styles.input, { color: theme.text, borderColor: theme.textSecondary }]}
+                placeholder="Custom code (optional)"
+                placeholderTextColor={theme.textSecondary}
+                value={code}
+                onChangeText={setCode}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+                returnKeyType="go"
+                onSubmitEditing={handleSubmit}
             />
             {error && (
                 <ThemedText type="small" style={styles.error}>
