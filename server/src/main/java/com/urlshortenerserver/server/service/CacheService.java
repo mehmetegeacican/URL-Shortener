@@ -8,7 +8,8 @@ import java.time.Duration;
 
 @Service
 public class CacheService implements ICacheService {
-    private static final String REDIRECT_CACHE_PREFIX = "redirect:";
+    public static final String REDIRECT_CACHE_PREFIX = "redirect:";
+
     private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
     private final RedisTemplate<String, String> redisTemplate;

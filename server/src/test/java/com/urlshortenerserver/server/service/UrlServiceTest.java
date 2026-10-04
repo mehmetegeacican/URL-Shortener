@@ -186,4 +186,122 @@ class UrlServiceTest {
         Mockito.verify(urlRepository).existsByCode("ABCD1");
         Mockito.verify(urlRepository, Mockito.never()).existsByCode("abcd1");
     }
+
+    @Test
+    void create_shouldGenerateCode_whenCodeIsNull() {
+        // Given
+        Url urlToCreate = new Url();
+        urlToCreate.setUrl("https://example.com");
+        urlToCreate.setCode(null);
+
+        Url savedUrl = new Url();
+        savedUrl.setId(1L);
+        savedUrl.setUrl("https://example.com");
+        savedUrl.setCode("ABCDE");
+        savedUrl.setDeleted(false);
+
+        Mockito.when(randomStringGenerator.generateRandomString()).thenReturn("abcde");
+        Mockito.when(urlRepository.existsByCode("ABCDE")).thenReturn(false);
+        Mockito.when(urlRepository.save(any(Url.class))).thenReturn(savedUrl);
+
+        // When
+        Url result = urlService.create(urlToCreate);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("ABCDE", result.getCode());
+        assertEquals("https://example.com", result.getUrl());
+        Mockito.verify(cacheService, Mockito.times(1)).cacheUrl("ABCDE", "https://example.com");
+        Mockito.verify(urlRepository, Mockito.times(1)).save(any(Url.class));
+    }
+
+    @Test
+    void getUrlByCode_shouldReturnCachedUrl_whenPresentInCache() throws Exception {
+        // Given
+        String code = "test";
+        Mockito.when(cacheService.getUrlFromCache("TEST")).thenReturn("https://example.com");
+
+        // When
+        Url result = urlService.getUrlByCode(code);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("TEST", result.getCode());
+        assertEquals("https://example.com", result.getUrl());
+
+        Mockito.verify(cacheService,Mockito.times(1)).getUrlFromCache("TEST");
+        Mockito.verify(urlRepository, Mockito.never()).findAllByCodeAndDeletedFalse(Mockito.anyString());
+    }
+
+    @Test
+    void generateCode_shouldRetry_whenGeneratedCodeAlreadyExists() {
+        // Given
+        Url existing = new Url();
+        existing.setId(1L);
+        existing.setCode("duplicate");
+        existing.setUrl("https://existing.com");
+        existing.setDeleted(false);
+
+        Mockito.when(randomStringGenerator.generateRandomString())
+                .thenReturn("duplicate")
+                .thenReturn("unique");
+        Mockito.when(urlRepository.findAllByCode("duplicate")).thenReturn(Optional.of(existing));
+        Mockito.when(urlRepository.findAllByCode("unique")).thenReturn(Optional.empty());
+
+        // When
+        String generatedCode = urlService.generateCode();
+
+        // Then
+        assertEquals("unique", generatedCode);
+        Mockito.verify(randomStringGenerator, Mockito.times(2)).generateRandomString();
+    }
+
+    @Test
+    void deleteUrl_shouldThrow_whenUrlDoesNotExist() {
+        // Given
+        Mockito.when(urlRepository.findAllByCode("NONEXISTENT")).thenReturn(Optional.empty());
+
+        // When / Then
+        UrlNotFoundException exception = assertThrows(
+                UrlNotFoundException.class,
+                () -> urlService.deleteUrl("nonexistent")
+        );
+
+        assertEquals("Url not found", exception.getMessage());
+        Mockito.verify(cacheService, Mockito.never()).invalidateCache(Mockito.anyString());
+        Mockito.verify(urlRepository, Mockito.never()).save(any(Url.class));
+    }
+
+    @Test
+    void deleteUrl_shouldMarkUrlDeleted_whenExists() throws Exception {
+        // Given
+        Url urlToDelete = new Url();
+        urlToDelete.setId(1L);
+        urlToDelete.setCode("TEST");
+        urlToDelete.setUrl("https://example.com");
+        urlToDelete.setDeleted(false);
+
+        Mockito.when(urlRepository.findAllByCode("TEST")).thenReturn(Optional.of(urlToDelete));
+
+        // When
+        urlService.deleteUrl("test");
+
+        // Then
+        assertTrue(urlToDelete.isDeleted());
+        Mockito.verify(urlRepository, Mockito.times(1)).save(urlToDelete);
+        Mockito.verify(cacheService, Mockito.times(1)).invalidateCache("TEST");
+    }
+
+    @Test
+    void generateID_shouldReturnNextId() {
+        // Given
+        Mockito.when(urlRepository.count()).thenReturn(5L);
+
+        // When
+        Long id = urlService.generateID();
+
+        // Then
+        assertEquals(6L, id);
+        Mockito.verify(urlRepository, Mockito.times(1)).count();
+    }
 }
