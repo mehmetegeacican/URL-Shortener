@@ -3,6 +3,7 @@ package com.urlshortenerserver.server.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urlshortenerserver.server.dto.UrlDto;
 import com.urlshortenerserver.server.dto.converter.UrlDtoConverter;
+import com.urlshortenerserver.server.exception.UrlNotFoundException;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.request.UrlRequest;
@@ -12,6 +13,7 @@ import netscape.javascript.JSObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -138,5 +140,60 @@ class UrlControllerTest {
         assertNotNull(createdUrl.getId());
 
 
+    }
+
+    @Test
+    void deleteUrl_shouldReturn204_whenUrlDeleted() throws Exception {
+        // Given
+        String code = "TEST123";
+
+        // When & Then
+        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNoContent())
+                .andExpect(MockMvcResultMatchers.content().string(""));
+
+        Mockito.verify(urlService, Mockito.times(1)).deleteUrl(code);
+    }
+
+    @Test
+    void deleteUrl_shouldReturn404_whenUrlNotFound() throws Exception {
+        // Given
+        String code = "NONEXISTENT";
+
+        Mockito.doThrow(new UrlNotFoundException("Url not found")).when(urlService).deleteUrl(code);
+
+        // When & Then
+        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+
+        Mockito.verify(urlService, Mockito.times(1)).deleteUrl(code);
+    }
+
+    @Test
+    void deleteUrl_shouldHandleInvalidCode() throws Exception {
+        // Given
+        String code = "";
+
+        // When & Then
+        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void deleteUrl_shouldCallServiceWithCorrectCode() throws Exception {
+        // Given
+        String code = "abc123";
+
+        // When & Then
+        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(urlService, Mockito.times(1)).deleteUrl(codeCaptor.capture());
+        assertEquals(code, codeCaptor.getValue());
     }
 }
