@@ -7,6 +7,7 @@ import { ThemedView } from "../themed-view";
 import { Spacing } from "@/constants/theme";
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
 import { ThemedText } from "../themed-text";
+import { CODE_MAX_LENGTH, validateCode } from "@/utils/code.validation";
 
 type Props = {
     onCreated: (createdUrl: Url) => void;
@@ -17,21 +18,32 @@ export function UrlForm({ onCreated }: Props) {
     const [url, setUrl] = useState<string>("");
     const [code, setCode] = useState<string>("");
     const codeInputRef = useRef<TextInput>(null);
+    const [codeError, setCodeError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async () => {
         const trimmed = url.trim();
+        const trimmedCode = code.trim();
 
         if (!/^https?:\/\/.+/i.test(trimmed)) {
             setError('Enter a full URL starting with http:// or https://');
             return;
         }
 
+        const codeValidationError = validateCode(trimmedCode);
+
+        if (codeValidationError) {
+            setCodeError(codeValidationError);
+            return;
+        }
+
+        setCodeError(null);
+
         try {
             setError(null);
             setLoading(true);
-            const createdUrl = await urlService.createUrl(trimmed, code.trim());
+            const createdUrl = await urlService.createUrl(trimmed, trimmedCode);
             onCreated(createdUrl);
             setUrl("");
             setCode("");
@@ -70,17 +82,29 @@ export function UrlForm({ onCreated }: Props) {
             />
             <TextInput
                 ref={codeInputRef}
-                style={[styles.input, { color: theme.text, borderColor: theme.textSecondary }]}
+                style={[
+                    styles.input,
+                    { color: theme.text, borderColor: codeError ? '#b91c1c' : theme.textSecondary },
+                ]}
                 placeholder="Custom code (optional)"
                 placeholderTextColor={theme.textSecondary}
                 value={code}
-                onChangeText={setCode}
+                onChangeText={(text) => {
+                    setCode(text);
+                    if (codeError) setCodeError(null);
+                }}
+                maxLength={CODE_MAX_LENGTH}
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={!loading}
                 returnKeyType="go"
                 onSubmitEditing={handleSubmit}
             />
+            {codeError && (
+                <ThemedText type="small" style={styles.error}>
+                    {codeError}
+                </ThemedText>
+            )}
             {error && (
                 <ThemedText type="small" style={styles.error}>
                     {error}
