@@ -16,8 +16,8 @@ public class Url {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     private String url;
+    private String code;
 
     private String code;
 
@@ -40,7 +40,6 @@ public class Url {
         this.url = url;
     }
 
-
     public String getCode() {
         return code;
     }
@@ -48,13 +47,4 @@ public class Url {
     public void setCode(String code) {
         this.code = code;
     }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
 }
