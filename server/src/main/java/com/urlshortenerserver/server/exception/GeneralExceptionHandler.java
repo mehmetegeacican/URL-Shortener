@@ -1,5 +1,7 @@
 package com.urlshortenerserver.server.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -11,50 +13,39 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(GeneralExceptionHandler.class);
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        Map<String,String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(x-> {
+            String fieldName = ((FieldError)x).getField();
+            String errorMessage = x.getDefaultMessage();
+            errors.put(fieldName,errorMessage);
+        });
+        logger.warn("Validation failed: errors={}", errors);
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(UrlNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUrlNotFound(
-            UrlNotFoundException ex,
-            WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> urlNotFoundException(UrlNotFoundException e){
+        logger.warn("URL not found: {}", e.getMessage());
+        Map<String,String> errors = new HashMap<>();
+        errors.put("error",e.getMessage());
+        return new ResponseEntity<>(errors,HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(CodeAlreadyExistsExceptiom.class)
-    public ResponseEntity<Map<String, Object>> handleCodeAlreadyExists(
-            CodeAlreadyExistsExceptiom ex,
-            WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Conflict");
-        body.put("message", ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
-        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(
-            Exception ex,
-            WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Internal Server Error");
-        body.put("message", "An unexpected error occurred");
-        body.put("path", request.getDescription(false).replace("uri=", ""));
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<?> codeAlreadyExists(CodeAlreadyExistsExceptiom e){
+        logger.warn("Short code already exists: {}", e.getMessage());
+        Map<String,String> errors = new HashMap<>();
+        errors.put("error",e.getMessage());
+        return new ResponseEntity<>(errors,HttpStatus.CONFLICT);
     }
 }
