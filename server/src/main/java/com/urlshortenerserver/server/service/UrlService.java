@@ -52,7 +52,7 @@ public class UrlService implements IUrlService {
 
     @Override
     public List<Url> getAllUrls() {
-        return this.urlRepository.findAll();
+        return this.urlRepository.findAllByDeletedFalse();
     }
 
     @Override

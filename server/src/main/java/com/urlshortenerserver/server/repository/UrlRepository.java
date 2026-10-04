@@ -4,10 +4,15 @@ import com.urlshortenerserver.server.model.Url;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UrlRepository extends JpaRepository<Url,Long> {
+
+
+    List<Url> findAllByDeletedFalse();
+
     Optional<Url> findAllByCode(String code);
 
     boolean existsByCode(String code);

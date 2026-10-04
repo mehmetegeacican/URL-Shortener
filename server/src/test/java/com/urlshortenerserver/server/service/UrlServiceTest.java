@@ -43,17 +43,21 @@ class UrlServiceTest {
     }
 
     @Test
-    void getAllUrls() {
-        //Given
-        Url url1 = new Url(1L,"http://servicetest.com","test",false);
-        Url url2 = new Url(2l,"http://hellothere.com","test2",false);
-        List<Url> testUrls = Arrays.asList(url1, url2);
-        //When
-        Mockito.when(urlRepository.findAll()).thenReturn(testUrls);
-        //Then
-        assertEquals(urlService.getAllUrls(),testUrls);
-        //Verify
-        Mockito.verify(urlRepository,Mockito.times(1)).findAll();
+    void getAllUrls_shouldReturnOnlyNonDeletedUrls() {
+        // Given
+        Url url1 = new Url(1L, "https://example1.com", "CODE1", false);
+        Url url2 = new Url(2L, "https://example2.com", "CODE2", false);
+
+        Mockito.when(urlRepository.findAllByDeletedFalse()).thenReturn(java.util.Arrays.asList(url1, url2));
+
+        // When
+        var result = urlService.getAllUrls();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.stream().noneMatch(Url::isDeleted));
+        Mockito.verify(urlRepository, Mockito.times(1)).findAllByDeletedFalse();
     }
 
     @Test
