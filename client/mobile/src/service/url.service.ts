@@ -11,7 +11,7 @@ const api = axios.create({
 
 export const urlService = {
   async getAllUrls(): Promise<Url[]> {
-    const response = await api.get<Url[]>("/");
+    const response = await api.get<Url[]>("/all");
     return response.data;
   },
   async createUrl(url: string, code?:string): Promise<Url> {
