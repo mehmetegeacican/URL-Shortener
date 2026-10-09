@@ -48,4 +48,23 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
         errors.put("error",e.getMessage());
         return new ResponseEntity<>(errors,HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<?> usernameAlreadyExists(UsernameAlreadyExistsException e){
+        logger.warn("Sign-up rejected: {}", e.getMessage());
+        Map<String,String> errors = new HashMap<>();
+        errors.put("error", e.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<?> invalidCredentials(InvalidCredentialsException e){
+        logger.warn("Failed login attempt");
+        Map<String,String> errors = new HashMap<>();
+        errors.put("error", e.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+    }
+
+
+
 }
