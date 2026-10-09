@@ -45,8 +45,8 @@ class UrlServiceTest {
     @Test
     void getAllUrls_shouldReturnOnlyNonDeletedUrls() {
         // Given
-        Url url1 = new Url(1L, "https://example1.com", "CODE1", false);
-        Url url2 = new Url(2L, "https://example2.com", "CODE2", false);
+        Url url1 = new Url(1L, "https://example1.com", "CODE1", false,null);
+        Url url2 = new Url(2L, "https://example2.com", "CODE2", false,null);
 
         Mockito.when(urlRepository.findAllByDeletedFalse()).thenReturn(java.util.Arrays.asList(url1, url2));
 
@@ -63,7 +63,7 @@ class UrlServiceTest {
     @Test
     void getUrlByCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com","TEST",false);
+        Url url1 = new Url(1l,"http://example.com","TEST",false,null);
         String code = "TEST";
         //When
         Mockito.when(urlRepository.findAllByCodeAndDeletedFalse("TEST")).thenReturn(Optional.of(url1));
@@ -95,7 +95,7 @@ class UrlServiceTest {
     void generateCode() {
         //Given
         String generatedCode = "generated";
-        Url testUrl = new Url(1l,"http://helloThere.com","generated",false);
+        Url testUrl = new Url(1l,"http://helloThere.com","generated",false,null);
         //When
         Mockito.when(urlRepository.findAllByCode(generatedCode)).thenReturn(Optional.of(testUrl));
         Mockito.when(urlRepository.findAllByCode("NonExisting")).thenReturn(Optional.empty());
@@ -121,7 +121,7 @@ class UrlServiceTest {
     @Test
     void createwithNoCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com",null,false);
+        Url url1 = new Url(1l,"http://example.com",null,false,null);
         String generatedTestCode = "GENERATED";
         //When
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn(generatedTestCode);

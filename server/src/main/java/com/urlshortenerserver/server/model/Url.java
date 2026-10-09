@@ -21,11 +21,11 @@ public class Url {
     private String url;
     private String code;
 
-    @Column(name = "user_id")
-    private UUID userId;
-
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean deleted = false;
+
+    @Column(name = "user_id")
+    private UUID userId;
 
     public Long getId() {
         return id;
