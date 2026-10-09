@@ -3,6 +3,8 @@ package com.urlshortenerserver.server.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "url", indexes = {
         @Index(name = "idx_code", columnList = "code", unique = true)
@@ -19,7 +21,8 @@ public class Url {
     private String url;
     private String code;
 
-
+    @Column(name = "user_id")
+    private UUID userId;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean deleted = false;
@@ -54,5 +57,13 @@ public class Url {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 }
