@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,5 +22,7 @@ public class UrlRequest {
             message = "Code must be 4-20 characters: letters, numbers, '-' or '_'"
     )
     private String code;
+
+    private UUID userId;
 
 }
