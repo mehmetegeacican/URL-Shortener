@@ -12,7 +12,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "click", indexes = {
         @Index(name = "idx_click_code", columnList = "code"),
-        @Index(name = "idx_click_clicked_at", columnList = "clickedAt")
+        @Index(name = "idx_click_clicked_at", columnList = "clicked_at") // Fixed: changed from clickedAt to clicked_at
 })
 @Builder
 @NoArgsConstructor
