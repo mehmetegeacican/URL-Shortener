@@ -41,7 +41,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await userService.login(username.trim(), password);
+      const result = await userService.login(username.trim(), password);
       // TODO (next step): the response contains the JWT; save it before navigating
       router.replace('/');
     } catch (e) {
