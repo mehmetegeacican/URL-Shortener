@@ -16,6 +16,7 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { userService } from '@/service/user.service';
 import { mapAuthError } from '@/utils/auth.error';
+import { useUserContext } from '@/contexts/userContext';
 
 export default function SignupScreen() {
   const [username, setUsername] = useState('');
@@ -24,6 +25,8 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const {dispatch} = useUserContext();
 
   const router = useRouter();
   const theme = useTheme();
@@ -46,8 +49,18 @@ export default function SignupScreen() {
 
     setLoading(true);
     try {
-      await userService.signUp(username.trim(), password);
+      const result = await userService.signUp(username.trim(), password);
       // TODO (next step): sign-up also logs the user in, so the response contains the JWT; save it before navigating
+      const signedUpUser = {
+        userId: result.userId,
+        username: result.username,
+        token: result.token,
+      };
+      dispatch({
+        type:'LOGIN',
+        payload:signedUpUser
+      });
+       //localStorage.setItem('user', JSON.stringify(loggedInUser));
       router.replace('/');
     } catch (e) {
       const mapped = mapAuthError(e);

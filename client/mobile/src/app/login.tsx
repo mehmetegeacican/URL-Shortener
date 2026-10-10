@@ -16,6 +16,7 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { userService } from '@/service/user.service';
 import { mapAuthError } from '@/utils/auth.error';
+import { useUserContext } from '@/contexts/userContext';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -23,6 +24,8 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const {state,dispatch} = useUserContext();
 
   const router = useRouter();
   const theme = useTheme();
@@ -43,6 +46,16 @@ export default function LoginScreen() {
     try {
       const result = await userService.login(username.trim(), password);
       // TODO (next step): the response contains the JWT; save it before navigating
+      const loggedInUser = {
+        userId: result.userId,
+        username: result.username,
+        token: result.token,
+      };
+      dispatch({
+        type:'LOGIN',
+        payload:loggedInUser
+      })
+      //localStorage.setItem('user', JSON.stringify(loggedInUser));
       router.replace('/');
     } catch (e) {
       const mapped = mapAuthError(e);
