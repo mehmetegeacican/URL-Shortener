@@ -2,90 +2,107 @@ package com.urlshortenerserver.server.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
-
-@ExtendWith(MockitoExtension.class)
 class CacheServiceTest {
+
     @Mock
     private RedisTemplate<String, String> redisTemplate;
 
     @Mock
     private ValueOperations<String, String> valueOperations;
 
+    @InjectMocks
     private CacheService cacheService;
 
     @BeforeEach
     void setUp() {
-        cacheService = new CacheService(redisTemplate);
-
+        MockitoAnnotations.openMocks(this);
+        Mockito.when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     @Test
-    void getUrlFromCache_Hit() {
+    void getUrlFromCache_Success() {
         // Given
-        String code = "TEST";
-        String cachedUrl = "https://example.com";
-        Mockito.when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        Mockito.when(valueOperations.get("redirect:TEST")).thenReturn(cachedUrl);
+        String code = "test";
+        String expectedUrl = "http://example.com";
+        Mockito.when(valueOperations.get("redirect:" + code)).thenReturn(expectedUrl);
 
         // When
-        String result = cacheService.getUrlFromCache(code);
+        String actualUrl = cacheService.getUrlFromCache(code);
 
         // Then
-        assertEquals(cachedUrl, result);
-        Mockito.verify(valueOperations, Mockito.times(1)).get("redirect:TEST");
+        assertEquals(expectedUrl, actualUrl);
     }
 
     @Test
-    void testGetUrlFromCache_Miss() {
+    void getUrlFromCache_Exception_ReturnsNull() {
         // Given
-        String code = "TEST";
-        Mockito.when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        Mockito.when(valueOperations.get("redirect:TEST")).thenReturn(null);
+        String code = "test";
+        Mockito.when(valueOperations.get(any())).thenThrow(new RuntimeException("Redis down"));
 
         // When
-        String result = cacheService.getUrlFromCache(code);
+        String actualUrl = cacheService.getUrlFromCache(code);
 
         // Then
-        assertNull(result);
-        Mockito.verify(valueOperations, Mockito.times(1)).get("redirect:TEST");
+        assertNull(actualUrl);
     }
 
     @Test
-    void cacheUrl() {
+    void cacheUrl_Success() {
         // Given
-        String code = "TEST";
-        String url = "https://example.com";
-        Mockito.when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        String code = "test";
+        String url = "http://example.com";
+
         // When
         cacheService.cacheUrl(code, url);
 
         // Then
-        Mockito.verify(valueOperations, Mockito.times(1)).set(
-                Mockito.eq("redirect:TEST"),
-                Mockito.eq("https://example.com"),
-                any()
-        );
+        verify(valueOperations).set(eq("redirect:" + code), eq(url), any(Duration.class));
     }
 
     @Test
-    void invalidateCache() {
+    void cacheUrl_Exception_HandledGracefully() {
         // Given
-        String code = "TEST";
+        String code = "test";
+        String url = "http://example.com";
+        doThrow(new RuntimeException("Redis down")).when(valueOperations).set(any(), any(), any());
+
+        // When & Then
+        assertDoesNotThrow(() -> cacheService.cacheUrl(code, url));
+    }
+
+    @Test
+    void invalidateCache_Success() {
+        // Given
+        String code = "test";
 
         // When
         cacheService.invalidateCache(code);
 
         // Then
-        Mockito.verify(redisTemplate, Mockito.times(1)).delete("redirect:TEST");
+        verify(redisTemplate).delete("redirect:" + code);
+    }
+
+    @Test
+    void invalidateCache_Exception_HandledGracefully() {
+        // Given
+        String code = "test";
+        doThrow(new RuntimeException("Redis down")).when(redisTemplate).delete(anyString());
+
+        // When & Then
+        assertDoesNotThrow(() -> cacheService.invalidateCache(code));
     }
 }
