@@ -27,6 +27,17 @@ class JWTServiceTest {
         testUser.setAdmin(true);
     }
 
+
+
+    @Test
+    void constructor_SecretTooShort_ThrowsException() {
+        // Given
+        String shortSecret = "tooShort";
+
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> new JWTService(shortSecret, 60));
+    }
+
     @Test
     void generateTokenAndParse_Success() {
         // Given
