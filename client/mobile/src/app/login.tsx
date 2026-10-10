@@ -55,7 +55,7 @@ export default function LoginScreen() {
         type:'LOGIN',
         payload:loggedInUser
       })
-      //localStorage.setItem('user', JSON.stringify(loggedInUser));
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
       router.replace('/');
     } catch (e) {
       const mapped = mapAuthError(e);

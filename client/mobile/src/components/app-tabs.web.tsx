@@ -11,9 +11,22 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useRouter } from 'expo-router';
+import { useUserContext } from '@/contexts/userContext';
+import { useEffect } from 'react';
+
 
 export default function AppTabs() {
+  const { state, dispatch } = useUserContext();
+
+  const handlelogout = () => {
+    dispatch({
+      type:'LOGOUT'
+    });
+    localStorage.removeItem('user');
+  }
+
+ 
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
@@ -26,7 +39,12 @@ export default function AppTabs() {
             <TabButton>TinyUrls</TabButton>
           </TabTrigger>
           <TabTrigger name="login" href="/login" asChild>
-            <TabButton>Log in</TabButton>
+            <TabButton hidden={state.isAuthenticated}>Log in</TabButton>
+          </TabTrigger>
+          <TabTrigger name="logout" asChild>
+            <TabButton hidden={!state.isAuthenticated} onPress={handlelogout}>
+              Logout
+            </TabButton>
           </TabTrigger>
           {/* Registered so /signup can be opened, but no button in the bar */}
           <TabTrigger name="signup" href="/signup" asChild>
