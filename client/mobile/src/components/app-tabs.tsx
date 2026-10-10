@@ -27,6 +27,14 @@ export default function AppTabs() {
           renderingMode="template"
         />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="login">
+        <NativeTabs.Trigger.Label>Log in</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />
+      </NativeTabs.Trigger>
+ 
+      
+      <NativeTabs.Trigger name="signup" hidden />
     </NativeTabs>
   );
 }
