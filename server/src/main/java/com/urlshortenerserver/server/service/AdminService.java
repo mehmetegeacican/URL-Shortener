@@ -5,6 +5,7 @@ import com.urlshortenerserver.server.model.Click;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.repository.UserRepository;
 import com.urlshortenerserver.server.repository.specifications.AdminStatSpecifications;
 import com.urlshortenerserver.server.repository.specifications.ClickSpecifications;
 import com.urlshortenerserver.server.repository.specifications.UrlSpecifications;
@@ -14,7 +15,6 @@ import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.response.UrlClickStatResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,14 +31,17 @@ import java.time.ZoneId;
 public class AdminService implements IAdminService {
     private final UrlRepository urlRepository;
     private final ClickRepository clickRepository;
+
+    private final UserRepository userRepository;
     private final CacheService cacheService;
 
 
 
-    public AdminService(UrlRepository urlRepository, CacheService cacheService, ClickRepository clickRepository) {
+    public AdminService(UrlRepository urlRepository, CacheService cacheService, ClickRepository clickRepository, UserRepository userRepository) {
         this.urlRepository = urlRepository;
         this.cacheService = cacheService;
         this.clickRepository = clickRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -124,23 +127,27 @@ public class AdminService implements IAdminService {
         long totalClicks = clickRepository.count();
         long clicksToday = clickRepository.count(AdminStatSpecifications.clickedAfter(startOfDay));
 
+        // User Stats using specifications
+        long totalUsers = userRepository.count();
+        long adminUsers = userRepository.countByAdminTrue();
+
         AdminStatResponse.ClickStats clickStats = AdminStatResponse.ClickStats.builder()
                 .total(totalClicks)
                 .today(clicksToday)
                 .build();
 
         AdminStatResponse.UserStats userStats = AdminStatResponse.UserStats.builder()
-                .total(0L)
-                .admins(0L)
+                .total(totalUsers)
+                .admins(adminUsers)
                 .build();
 
         return AdminStatResponse.builder()
                 .urls(urlStats)
                 .users(userStats)
                 .clicks(clickStats)
-                //.topUrls(clickRepository.findTopUrls(PageRequest.of(0, 5)))
-                //.topIps(clickRepository.findTopIps(PageRequest.of(0, 5)))
-                //.clicksPerDay(clickRepository.findClicksPerDay(PageRequest.of(0, 7)))
+                .topUrls(ClickSpecifications.getTopUrls(clickRepository, urlRepository, 5))
+                .topIps(ClickSpecifications.getTopIps(clickRepository, 5))
+                .clicksPerDay(ClickSpecifications.getClicksPerDay(clickRepository, 7))
                 .build();
     }
 }
