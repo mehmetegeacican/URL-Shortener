@@ -2,6 +2,7 @@ package com.urlshortenerserver.server.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class Url {
     @Column(name = "user_id")
     private UUID userId;
 
+    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
@@ -74,4 +76,6 @@ public class Url {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+
 }

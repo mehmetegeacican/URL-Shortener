@@ -22,6 +22,7 @@ public class UrlDtoConverter {
                 url(urlParam.getUrl()).
                 code(urlParam.getCode()).
                 userId(urlParam.getUserId()).
+                createdAt(urlParam.getCreatedAt()).
                 build();
     }
 
