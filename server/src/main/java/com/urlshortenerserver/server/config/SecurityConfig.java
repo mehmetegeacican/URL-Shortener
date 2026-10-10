@@ -40,9 +40,9 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(new JwtAuthFilter(jwtService, userRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/sign-up", "/user/login").permitAll()
+                        .requestMatchers("/api/v2/user/sign-up", "/api/v2/user/login").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v2/admin/**").hasRole("ADMIN")
                         // Redirects and anonymous URL creation stay public for now
                         .anyRequest().permitAll());
 
