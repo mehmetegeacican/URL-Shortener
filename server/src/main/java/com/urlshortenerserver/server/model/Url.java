@@ -3,6 +3,7 @@ package com.urlshortenerserver.server.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -26,6 +27,9 @@ public class Url {
 
     @Column(name = "user_id")
     private UUID userId;
+
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
 
     public Long getId() {
         return id;
@@ -65,5 +69,9 @@ public class Url {
 
     public void setUserId(UUID userId) {
         this.userId = userId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 }
