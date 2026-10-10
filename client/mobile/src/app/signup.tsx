@@ -60,7 +60,7 @@ export default function SignupScreen() {
         type:'LOGIN',
         payload:signedUpUser
       });
-       //localStorage.setItem('user', JSON.stringify(loggedInUser));
+      
       router.replace('/');
     } catch (e) {
       const mapped = mapAuthError(e);
