@@ -12,17 +12,18 @@ import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useUserContext } from '@/contexts/userContext';
-import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 export default function AppTabs() {
   const { state, dispatch } = useUserContext();
 
-  const handlelogout = () => {
+  const handlelogout = async () => {
     dispatch({
       type:'LOGOUT'
     });
-    localStorage.removeItem('user');
+    await AsyncStorage.removeItem('user');
   }
 
  

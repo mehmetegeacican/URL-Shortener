@@ -17,6 +17,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { userService } from '@/service/user.service';
 import { mapAuthError } from '@/utils/auth.error';
 import { useUserContext } from '@/contexts/userContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignupScreen() {
     const [username, setUsername] = useState('');
@@ -60,7 +61,7 @@ export default function SignupScreen() {
                 type: 'LOGIN',
                 payload: signedUpUser
             });
-            localStorage.setItem('user', JSON.stringify(signedUpUser));
+            await AsyncStorage.setItem('user', JSON.stringify(signedUpUser));
             router.replace('/');
         } catch (e) {
             const mapped = mapAuthError(e);

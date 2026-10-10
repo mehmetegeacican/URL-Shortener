@@ -1,11 +1,12 @@
 import { createContext, ReactNode, useContext, useEffect, useReducer } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 1. User State shape
 export interface UserState {
     username: string;
     token: string;
     userId: string;
-    isAuthenticated:boolean;
+    isAuthenticated: boolean;
 }
 
 // 2. User Actions
@@ -28,7 +29,7 @@ const initialState: UserState = {
     username: '',
     token: '',
     userId: '',
-    isAuthenticated:false
+    isAuthenticated: false
 };
 
 // 6. Reducer , strict typing
@@ -41,7 +42,7 @@ function userReducer(state: UserState, action: UserAction): UserState {
                 username: action.payload.username,
                 userId: action.payload.userId,
                 token: action.payload.token,
-                isAuthenticated:true
+                isAuthenticated: true
             };
         case 'LOGOUT':
             return initialState;
@@ -68,15 +69,23 @@ export function UserProvider({ children }: UserProviderProps) {
 
 
     useEffect(() => {
-        const user = localStorage.getItem('user');
-        if (user) {
-            dispatch({ type: 'LOGIN', payload: JSON.parse(user) });
+        async function loadStoredUser() {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    dispatch({ type: 'LOGIN', payload: userData });
+                }
+            } catch (error) {
+                console.error('Failed to load user session', error);
+            }
         }
+        loadStoredUser();
     }, []);
 
     useEffect(() => {
         console.log(state);
-    },[state]);
+    }, [state]);
 
     return (
         <UserContext.Provider value={{ state, dispatch }}>
