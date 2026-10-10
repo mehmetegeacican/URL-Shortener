@@ -1,10 +1,11 @@
-import { createContext, ReactNode, useContext, useReducer } from "react";
+import { createContext, ReactNode, useContext, useEffect, useReducer } from "react";
 
 // 1. User State shape
 export interface UserState {
     username: string;
     token: string;
     userId: string;
+    isAuthenticated:boolean;
 }
 
 // 2. User Actions
@@ -27,25 +28,22 @@ const initialState: UserState = {
     username: '',
     token: '',
     userId: '',
+    isAuthenticated:false
 };
 
 // 6. Reducer , strict typing
 function userReducer(state: UserState, action: UserAction): UserState {
     switch (action.type) {
         case 'LOGIN':
-            localStorage.setItem('user', JSON.stringify({
-                username: action.payload.username,
-                userId: action.payload.userId,
-                token: action.payload.token,
-            }));
+
             return {
                 ...state,
                 username: action.payload.username,
                 userId: action.payload.userId,
                 token: action.payload.token,
+                isAuthenticated:true
             };
         case 'LOGOUT':
-            localStorage.clearItem('user');
             return initialState;
         case 'UPDATE_PROFILE':
             return {
@@ -67,6 +65,18 @@ interface UserProviderProps {
 // 8. Provider Component
 export function UserProvider({ children }: UserProviderProps) {
     const [state, dispatch] = useReducer(userReducer, initialState);
+
+
+    useEffect(() => {
+        const user = localStorage.getItem('user');
+        if (user) {
+            dispatch({ type: 'LOGIN', payload: JSON.parse(user) });
+        }
+    }, []);
+
+    useEffect(() => {
+        console.log(state);
+    },[state]);
 
     return (
         <UserContext.Provider value={{ state, dispatch }}>
