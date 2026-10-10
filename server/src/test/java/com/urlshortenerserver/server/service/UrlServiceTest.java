@@ -7,6 +7,7 @@ import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 
 class UrlServiceTest {
     @Mock
@@ -35,6 +37,9 @@ class UrlServiceTest {
 
     @Mock
     private CacheService cacheService;
+
+    @Mock
+    private HttpServletRequest request;
 
     @BeforeEach
     void setUp(){
@@ -310,5 +315,33 @@ class UrlServiceTest {
         // Then
         assertEquals(6L, id);
         Mockito.verify(urlRepository, Mockito.times(1)).count();
+    }
+
+
+    @Test
+    void extractClientIp_WithXForwardedFor() {
+        // Given
+        Mockito.when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.195, 70.41.3.18");
+        Mockito.when(urlRepository.findByCode(any())).thenReturn(java.util.Optional.of(new Url()));
+
+        // When
+        urlService.recordClick("TEST", request);
+
+        // Then
+        Mockito.verify(clickRepository).save(argThat(click -> click.getIp().equals("203.0.113.195")));
+    }
+
+    @Test
+    void extractClientIp_WithoutXForwardedFor() {
+        // Given
+        Mockito.when(request.getHeader("X-Forwarded-For")).thenReturn(null);
+        Mockito.when(request.getRemoteAddr()).thenReturn("192.168.1.50");
+        Mockito.when(urlRepository.findByCode(any())).thenReturn(java.util.Optional.of(new Url()));
+
+        // When
+        urlService.recordClick("TEST", request);
+
+        // Then
+        Mockito.verify(clickRepository).save(argThat(click -> click.getIp().equals("192.168.1.50")));
     }
 }
