@@ -150,7 +150,7 @@ export default function SignupScreen() {
               )}
             </Pressable>
 
-            <Pressable onPress={() => router.replace('/login')} disabled={loading} style={styles.switchLink}>
+            <Pressable onPress={() => router.navigate('/login')} disabled={loading} style={styles.switchLink}>
               <ThemedText themeColor="textSecondary" style={styles.centerText}>
                 Already have an account? Log in
               </ThemedText>

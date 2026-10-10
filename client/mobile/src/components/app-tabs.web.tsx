@@ -11,6 +11,7 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useRouter } from 'expo-router';
 
 export default function AppTabs() {
   return (
@@ -24,13 +25,30 @@ export default function AppTabs() {
           <TabTrigger name="tiny-urls" href="/tinyUrls" asChild>
             <TabButton>TinyUrls</TabButton>
           </TabTrigger>
+          <TabTrigger name="login" href="/login" asChild>
+            <TabButton>Log in</TabButton>
+          </TabTrigger>
+          {/* Registered so /signup can be opened, but no button in the bar */}
+          <TabTrigger name="signup" href="/signup" asChild>
+            <TabButton hidden>Sign up</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+export function TabButton({
+  children,
+  isFocused,
+  hidden,
+  ...props
+}: TabTriggerSlotProps & { hidden?: boolean }) {
+
+  if (hidden) {
+    return null;
+  }
+
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
