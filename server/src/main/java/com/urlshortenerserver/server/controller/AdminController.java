@@ -2,6 +2,7 @@ package com.urlshortenerserver.server.controller;
 
 
 import com.urlshortenerserver.server.request.filter.UrlFilter;
+import com.urlshortenerserver.server.response.AdminStatResponse;
 import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.response.UrlClickStatResponse;
@@ -43,7 +44,7 @@ public class AdminController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size must be between 1 and " + MAX_PAGE_SIZE);
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "created_at"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         return ResponseEntity.ok(adminService.listUrls(filter,pageable));
     }
@@ -73,6 +74,12 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "clickedAt"));
 
         return ResponseEntity.ok(adminService.getUrlClicks(code, from, to, pageable));
+    }
+
+
+    @GetMapping("/stats")
+    public ResponseEntity<AdminStatResponse> getSystemStats() {
+        return ResponseEntity.ok(adminService.getSystemStats());
     }
 }
 

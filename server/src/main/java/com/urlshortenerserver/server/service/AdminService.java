@@ -5,9 +5,11 @@ import com.urlshortenerserver.server.model.Click;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.repository.specifications.AdminStatSpecifications;
 import com.urlshortenerserver.server.repository.specifications.ClickSpecifications;
 import com.urlshortenerserver.server.repository.specifications.UrlSpecifications;
 import com.urlshortenerserver.server.request.filter.UrlFilter;
+import com.urlshortenerserver.server.response.AdminStatResponse;
 import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.response.UrlClickStatResponse;
@@ -22,7 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Service
 public class AdminService implements IAdminService {
@@ -93,6 +96,51 @@ public class AdminService implements IAdminService {
                 .totalClicks(totalClicks)
                 // populate other stats...
                 .clicks(PageResponse.from(logDtoPage))
+                .build();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminStatResponse getSystemStats(){
+        Instant startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        // URL Stats using Specifications
+        long totalUrls = urlRepository.count();
+        long activeUrls = urlRepository.count(AdminStatSpecifications.isDeleted(false));
+        long deletedUrls = urlRepository.count(AdminStatSpecifications.isDeleted(true));
+        long anonymousUrls = urlRepository.count(AdminStatSpecifications.isAnonymous());
+        long createdToday = urlRepository.count(AdminStatSpecifications.createdAfter(startOfDay));
+
+        AdminStatResponse.UrlStats urlStats = AdminStatResponse.UrlStats.builder()
+                .total(totalUrls)
+                .active(activeUrls)
+                .deleted(deletedUrls)
+                .anonymous(anonymousUrls)
+                .createdToday(createdToday)
+                .build();
+
+        // Click Stats using Specifications
+        long totalClicks = clickRepository.count();
+        long clicksToday = clickRepository.count(AdminStatSpecifications.clickedAfter(startOfDay));
+
+        AdminStatResponse.ClickStats clickStats = AdminStatResponse.ClickStats.builder()
+                .total(totalClicks)
+                .today(clicksToday)
+                .build();
+
+        AdminStatResponse.UserStats userStats = AdminStatResponse.UserStats.builder()
+                .total(0L)
+                .admins(0L)
+                .build();
+
+        return AdminStatResponse.builder()
+                .urls(urlStats)
+                .users(userStats)
+                .clicks(clickStats)
+                //.topUrls(clickRepository.findTopUrls(PageRequest.of(0, 5)))
+                //.topIps(clickRepository.findTopIps(PageRequest.of(0, 5)))
+                //.clicksPerDay(clickRepository.findClicksPerDay(PageRequest.of(0, 7)))
                 .build();
     }
 }

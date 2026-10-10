@@ -1,6 +1,7 @@
 package com.urlshortenerserver.server.service;
 
 import com.urlshortenerserver.server.request.filter.UrlFilter;
+import com.urlshortenerserver.server.response.AdminStatResponse;
 import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.response.UrlClickStatResponse;
@@ -17,4 +18,7 @@ public interface IAdminService {
 
     @Transactional(readOnly = true)
     UrlClickStatResponse getUrlClicks(String code, Instant from, Instant to, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    AdminStatResponse getSystemStats();
 }
