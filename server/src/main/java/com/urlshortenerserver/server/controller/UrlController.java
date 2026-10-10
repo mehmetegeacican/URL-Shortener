@@ -6,6 +6,7 @@ import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.request.UrlRequest;
 import com.urlshortenerserver.server.request.converter.UrlRequestConverter;
 import com.urlshortenerserver.server.service.UrlService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -56,9 +57,13 @@ public class UrlController {
     }
 
     @GetMapping("/{code}")
-    public ResponseEntity<List<UrlDto>> redirect(@Valid @NotNull @PathVariable String code) throws Exception{
+    public ResponseEntity<List<UrlDto>> redirect(@Valid @NotNull @PathVariable String code, HttpServletRequest request) throws Exception{
 
+        // 1. Get the target URL (hits cache or DB safely)
         Url url = service.getUrlByCode(code);
+
+        // 2. Log the click event independently
+        service.recordClick(code, request);
 
         URI uri = new URI(url.getUrl());
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -68,6 +73,8 @@ public class UrlController {
                httpHeaders,HttpStatus.SEE_OTHER
         );
     }
+
+
 
     @PostMapping("/create")
     public ResponseEntity<UrlDto> postURL (@Valid @RequestBody UrlRequest urlRequest){

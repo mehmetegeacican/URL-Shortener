@@ -25,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -68,8 +69,8 @@ class UrlControllerTest {
     @Test
     void getAllUrls() throws Exception {
         //Given
-        Url url1 = new Url(1l,"http://helloThere.com","test1",false,null);
-        Url url2 = new Url(2l,"http://hellorThere.com","test2",false,null);
+        Url url1 = new Url(1l,"http://helloThere.com","test1",false,null,null);
+        Url url2 = new Url(2l,"http://hellorThere.com","test2",false,null,null);
         List<Url> testList = new ArrayList<>(Arrays.asList(url1,url2));
         List<UrlDto> expectedDtoList = new ArrayList<>();
         expectedDtoList.add(dtoConverter.convertToDto(url1));
@@ -90,7 +91,7 @@ class UrlControllerTest {
     @Test
     void getUrlByCode() throws Exception {
         //Given
-        Url url1 = new Url(1l,"http://helloThere.com","test1",false,null);
+        Url url1 = new Url(1l,"http://helloThere.com","test1",false,null,null);
         UrlDto urlDto = dtoConverter.convertToDto(url1);
         //When
         Mockito.when(urlService.getUrlByCode("test1")).thenReturn(url1);
@@ -105,14 +106,18 @@ class UrlControllerTest {
     void redirect() throws Exception {
         //Given
         String code = "test";
-        Url url = new Url(1l,"http://example.com","test",false,null);
+        Url url = new Url(1l,"http://example.com","test",false,null,null);
         URI uri = new URI(url.getUrl());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(uri);
+        // Mock Request
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("127.0.0.1");
+        request.addHeader("User-Agent", "JUnit-Test-Agent");
         //When
         Mockito.when(urlService.getUrlByCode(code)).thenReturn(url);
         //Then
-        ResponseEntity<List<UrlDto>> response = urlController.redirect(code);
+        ResponseEntity<List<UrlDto>> response = urlController.redirect(code,request);
         assertEquals(HttpStatus.SEE_OTHER,response.getStatusCode());
         assertEquals(httpHeaders,response.getHeaders());
 
@@ -122,8 +127,8 @@ class UrlControllerTest {
     void postURL() throws Exception {
         //Given
         UrlRequest request = UrlRequest.builder().url("http://example.com").build();
-        Url createdUrl = new Url(null,"http://example.com","test",false,null);
-        UrlDto createdUrlDto = new UrlDto(2l,"http://example.com","test",null);
+        Url createdUrl = new Url(null,"http://example.com","test",false,null,null);
+        UrlDto createdUrlDto = new UrlDto(2l,"http://example.com","test",null,null);
         //When
         Mockito.when(requestConverter.convertToEntity(request)).thenReturn(createdUrl);
         Mockito.when(urlService.generateCode()).thenReturn("test");

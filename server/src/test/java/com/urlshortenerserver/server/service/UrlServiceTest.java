@@ -3,6 +3,7 @@ package com.urlshortenerserver.server.service;
 import com.urlshortenerserver.server.exception.CodeAlreadyExistsExceptiom;
 import com.urlshortenerserver.server.exception.UrlNotFoundException;
 import com.urlshortenerserver.server.model.Url;
+import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
@@ -12,8 +13,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 class UrlServiceTest {
     @Mock
     private UrlRepository urlRepository;
+
+
+    @Mock
+    private ClickRepository clickRepository;
 
     @Mock
     private UrlService urlService;
@@ -39,14 +42,14 @@ class UrlServiceTest {
         randomStringGenerator = Mockito.mock(RandomStringGenerator.class);
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn("NonExisting");
         MockitoAnnotations.openMocks(this);
-        urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator, cacheService);
+        urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator, cacheService, clickRepository);
     }
 
     @Test
     void getAllUrls_shouldReturnOnlyNonDeletedUrls() {
         // Given
-        Url url1 = new Url(1L, "https://example1.com", "CODE1", false,null);
-        Url url2 = new Url(2L, "https://example2.com", "CODE2", false,null);
+        Url url1 = new Url(1L, "https://example1.com", "CODE1", false,null,null);
+        Url url2 = new Url(2L, "https://example2.com", "CODE2", false,null,null);
 
         Mockito.when(urlRepository.findAllByDeletedFalse()).thenReturn(java.util.Arrays.asList(url1, url2));
 
@@ -63,7 +66,7 @@ class UrlServiceTest {
     @Test
     void getUrlByCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com","TEST",false,null);
+        Url url1 = new Url(1l,"http://example.com","TEST",false,null,null);
         String code = "TEST";
         //When
         Mockito.when(urlRepository.findAllByCodeAndDeletedFalse("TEST")).thenReturn(Optional.of(url1));
@@ -95,7 +98,7 @@ class UrlServiceTest {
     void generateCode() {
         //Given
         String generatedCode = "generated";
-        Url testUrl = new Url(1l,"http://helloThere.com","generated",false,null);
+        Url testUrl = new Url(1l,"http://helloThere.com","generated",false,null,null);
         //When
         Mockito.when(urlRepository.findAllByCode(generatedCode)).thenReturn(Optional.of(testUrl));
         Mockito.when(urlRepository.findAllByCode("NonExisting")).thenReturn(Optional.empty());
@@ -121,7 +124,7 @@ class UrlServiceTest {
     @Test
     void createwithNoCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com",null,false,null);
+        Url url1 = new Url(1l,"http://example.com",null,false,null,null);
         String generatedTestCode = "GENERATED";
         //When
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn(generatedTestCode);
