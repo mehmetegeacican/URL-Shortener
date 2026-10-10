@@ -16,6 +16,8 @@ public interface UrlRepository extends JpaRepository<Url,Long> , JpaSpecificatio
 
     Optional<Url> findAllByCode(String code);
 
+    Optional<Url> findByCode(String code);
+
     boolean existsByCode(String code);
 
     Optional<Url> findAllByCodeAndDeletedFalse(String code);

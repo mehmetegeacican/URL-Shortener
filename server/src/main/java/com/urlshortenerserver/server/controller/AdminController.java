@@ -45,5 +45,11 @@ public class AdminController {
 
         return ResponseEntity.ok(adminService.listUrls(filter,pageable));
     }
+
+    @PostMapping("/urls/{code}/restore")
+    public ResponseEntity<Void> restoreUrl(@PathVariable String code) {
+        adminService.restoreUrl(code);
+        return ResponseEntity.ok().build();
+    }
 }
 

@@ -9,17 +9,21 @@ import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AdminService implements IAdminService {
     private final UrlRepository urlRepository;
+    private final CacheService cacheService;
 
-    public AdminService(UrlRepository urlRepository) {
+    public AdminService(UrlRepository urlRepository, CacheService cacheService) {
         this.urlRepository = urlRepository;
+        this.cacheService = cacheService;
     }
 
 
@@ -37,5 +41,18 @@ public class AdminService implements IAdminService {
                 .url(url.getUrl())
                 .deleted(url.isDeleted())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void restoreUrl(String code){
+        Url url = urlRepository.findByCode(code)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "URL not found with code: " + code));
+
+        url.setDeleted(false);
+        urlRepository.save(url);
+
+        // Optionally put it back into cache so it's active immediately
+        cacheService.cacheUrl(url.getCode(), url.getUrl());
     }
 }

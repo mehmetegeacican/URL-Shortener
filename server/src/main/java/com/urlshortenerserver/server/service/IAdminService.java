@@ -9,4 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 public interface IAdminService {
     @Transactional(readOnly = true)
     PageResponse<AdminUrlResponse> listUrls(UrlFilter filter, Pageable pageable);
+
+    void restoreUrl(String code);
 }
