@@ -42,7 +42,7 @@ public class UserService implements IUserService {
         User user = new User();
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setAdmin(false); // never taken from the request
+        user.setAdmin(false);
 
         try {
             user = userRepository.saveAndFlush(user);
