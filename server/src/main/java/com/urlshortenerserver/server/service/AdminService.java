@@ -3,9 +3,12 @@ package com.urlshortenerserver.server.service;
 
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.repository.specifications.UrlSpecifications;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,8 +25,9 @@ public class AdminService implements IAdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminUrlResponse> listUrls(Pageable pageable) {
-        Page<Url> page = urlRepository.findAll(pageable);
+    public PageResponse<AdminUrlResponse> listUrls(UrlFilter filter, Pageable pageable) {
+        Specification<Url> spec = UrlSpecifications.withFilters(filter);
+        Page<Url> page = urlRepository.findAll(spec,pageable);
         return PageResponse.from(page.map(this::toResponse));
     }
 

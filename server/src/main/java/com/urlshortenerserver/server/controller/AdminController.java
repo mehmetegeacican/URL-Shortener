@@ -1,6 +1,7 @@
 package com.urlshortenerserver.server.controller;
 
 
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.response.AdminUrlResponse;
 import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.service.IAdminService;
@@ -29,7 +30,8 @@ public class AdminController {
     @GetMapping("/urls/all")
     public ResponseEntity<PageResponse<AdminUrlResponse>> listUrls(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @ModelAttribute UrlFilter filter) {
 
         if (page < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be 0 or greater");
@@ -41,7 +43,7 @@ public class AdminController {
         // Sorted by id for now; createdAt doesn't exist yet
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
 
-        return ResponseEntity.ok(adminService.listUrls(pageable));
+        return ResponseEntity.ok(adminService.listUrls(filter,pageable));
     }
 }
 
