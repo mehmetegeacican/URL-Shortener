@@ -8,6 +8,7 @@ import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.request.UrlRequest;
 import com.urlshortenerserver.server.request.converter.UrlRequestConverter;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.service.UrlService;
 import netscape.javascript.JSObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,18 +73,19 @@ class UrlControllerTest {
         Url url1 = new Url(1l,"http://helloThere.com","test1",false,null,null);
         Url url2 = new Url(2l,"http://hellorThere.com","test2",false,null,null);
         List<Url> testList = new ArrayList<>(Arrays.asList(url1,url2));
+        UrlFilter filter = new UrlFilter();
         List<UrlDto> expectedDtoList = new ArrayList<>();
         expectedDtoList.add(dtoConverter.convertToDto(url1));
         expectedDtoList.add(dtoConverter.convertToDto(url2));
         //When
-        Mockito.when(urlService.getAllUrls()).thenReturn(testList);
+        Mockito.when(urlService.getAllUrls(filter)).thenReturn(testList);
         Mockito.when(dtoConverter.convertToDto(testList)).thenReturn(expectedDtoList);
-        ResponseEntity<List<UrlDto>> response = urlController.getAllUrls();
+        ResponseEntity<List<UrlDto>> response = urlController.getAllUrls(filter);
         //Then
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(expectedDtoList,response.getBody());
 
-        Mockito.verify(urlService,Mockito.times(1)).getAllUrls();
+        Mockito.verify(urlService,Mockito.times(1)).getAllUrls(filter);
         Mockito.verify(dtoConverter,Mockito.times(1)).convertToDto(testList);
 
     }
