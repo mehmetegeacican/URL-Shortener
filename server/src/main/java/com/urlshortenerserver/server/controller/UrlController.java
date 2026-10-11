@@ -5,6 +5,7 @@ import com.urlshortenerserver.server.dto.converter.UrlDtoConverter;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.request.UrlRequest;
 import com.urlshortenerserver.server.request.converter.UrlRequestConverter;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.service.UrlService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -43,9 +44,9 @@ public class UrlController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UrlDto>> getAllUrls(){
+    public ResponseEntity<List<UrlDto>> getAllUrls(@ModelAttribute UrlFilter filter){
         return new ResponseEntity<List<UrlDto>>(
-                urlDtoConverter.convertToDto(service.getAllUrls()), HttpStatus.OK
+                urlDtoConverter.convertToDto(service.getAllUrls(filter)), HttpStatus.OK
         );
     }
 

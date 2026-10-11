@@ -7,12 +7,17 @@ import com.urlshortenerserver.server.model.Click;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.repository.specifications.UrlSpecifications;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
+import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -64,8 +69,14 @@ public class UrlService implements IUrlService {
 
 
     @Override
-    public List<Url> getAllUrls() {
-        return this.urlRepository.findAllByDeletedFalse();
+    public List<Url> getAllUrls(UrlFilter filter) {
+        // Base specification: always ensure deleted is false
+        Specification<Url> spec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("deleted"), false);
+        if (filter != null) {
+            spec = spec.and(UrlSpecifications.hasUserIdOrNull(filter.getUserId()));
+        }
+        return this.urlRepository.findAll(spec);
     }
 
     @Override

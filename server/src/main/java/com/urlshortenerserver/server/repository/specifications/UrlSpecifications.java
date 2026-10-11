@@ -45,4 +45,17 @@ public class UrlSpecifications {
             return criteriaBuilder.equal(root.get("userId"), userId);
         };
     }
+
+    public static Specification<Url> hasUserIdOrNull(UUID userId) {
+        return (root, query, criteriaBuilder) -> {
+            if (userId == null) {
+                return criteriaBuilder.isNull(root.get("userId"));
+            } else {
+                return criteriaBuilder.or(
+                        criteriaBuilder.equal(root.get("userId"), userId),
+                        criteriaBuilder.isNull(root.get("userId"))
+                );
+            }
+        };
+    }
 }
