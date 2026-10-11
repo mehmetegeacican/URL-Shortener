@@ -11,8 +11,23 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useUserContext } from '@/contexts/userContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 export default function AppTabs() {
+  const { state, dispatch } = useUserContext();
+
+  const handlelogout = async () => {
+    dispatch({
+      type: 'LOGOUT'
+    });
+    await AsyncStorage.removeItem('user');
+  }
+
+
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
@@ -21,16 +36,42 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
+          <TabTrigger name="admin" href="/admin" asChild>
+            <TabButton hidden={!(state.isAdmin && state.isAuthenticated)}>Admin</TabButton>
+          </TabTrigger>
           <TabTrigger name="tiny-urls" href="/tinyUrls" asChild>
             <TabButton>TinyUrls</TabButton>
           </TabTrigger>
+          <TabTrigger name="login" href="/login" asChild>
+            <TabButton hidden={state.isAuthenticated}>Log in</TabButton>
+          </TabTrigger>
+          <TabTrigger name="logout" asChild>
+            <TabButton hidden={!state.isAuthenticated} onPress={handlelogout}>
+              Logout
+            </TabButton>
+          </TabTrigger>
+          {/* Registered so /signup can be opened, but no button in the bar */}
+          <TabTrigger name="signup" href="/signup" asChild>
+            <TabButton hidden>Sign up</TabButton>
+          </TabTrigger>
+          
         </CustomTabList>
       </TabList>
     </Tabs>
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+export function TabButton({
+  children,
+  isFocused,
+  hidden,
+  ...props
+}: TabTriggerSlotProps & { hidden?: boolean }) {
+
+  if (hidden) {
+    return null;
+  }
+
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView

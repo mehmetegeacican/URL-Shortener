@@ -3,32 +3,46 @@ package com.urlshortenerserver.server.service;
 
 import com.urlshortenerserver.server.exception.CodeAlreadyExistsExceptiom;
 import com.urlshortenerserver.server.exception.UrlNotFoundException;
+import com.urlshortenerserver.server.model.Click;
 import com.urlshortenerserver.server.model.Url;
+import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.repository.specifications.UrlSpecifications;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
+import com.urlshortenerserver.server.response.PageResponse;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
 public class UrlService implements IUrlService {
 
     private final UrlRepository urlRepository;
+
     private final RandomStringGenerator randomStringGenerator;
     private final IdGenerator idGenerator;
 
     private final CacheService cacheService;
 
+    private final ClickRepository clickRepository;
+
     private static final Logger logger = LoggerFactory.getLogger(UrlService.class);
 
-    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator, CacheService cacheService) {
+    public UrlService(UrlRepository urlRepository, RandomStringGenerator randomStringGenerator, IdGenerator idGenerator, CacheService cacheService, ClickRepository clickRepository) {
         this.urlRepository = urlRepository;
         this.randomStringGenerator = randomStringGenerator;
         this.idGenerator = idGenerator;
         this.cacheService = cacheService;
+        this.clickRepository = clickRepository;
     }
 
     @Override
@@ -55,8 +69,14 @@ public class UrlService implements IUrlService {
 
 
     @Override
-    public List<Url> getAllUrls() {
-        return this.urlRepository.findAllByDeletedFalse();
+    public List<Url> getAllUrls(UrlFilter filter) {
+        // Base specification: always ensure deleted is false
+        Specification<Url> spec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("deleted"), false);
+        if (filter != null) {
+            spec = spec.and(UrlSpecifications.hasUserIdOrNull(filter.getUserId()));
+        }
+        return this.urlRepository.findAll(spec);
     }
 
     @Override
@@ -79,6 +99,35 @@ public class UrlService implements IUrlService {
         cacheService.cacheUrl(normalizedCode, url.getUrl());
 
         return url;
+    }
+
+
+    @Override
+    @Transactional
+    public void recordClick(String code, HttpServletRequest request) {
+        String normalizedCode = code.toUpperCase();
+
+        String ip = extractClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+        String referer = request.getHeader("Referer");
+
+        Click click = Click.builder()
+                .code(normalizedCode)
+                .ip(ip)
+                .userAgent(userAgent)
+                .referer(referer)
+                .clickedAt(Instant.now())
+                .build();
+
+        clickRepository.save(click);
+    }
+
+    private String extractClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @Override

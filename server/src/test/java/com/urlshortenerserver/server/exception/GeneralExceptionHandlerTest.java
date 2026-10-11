@@ -38,6 +38,16 @@ class GeneralExceptionHandlerTest {
             throw new CodeAlreadyExistsExceptiom("TAKEN1");
         }
 
+        @GetMapping("/username-conflict")
+        public String usernameConflict() {
+            throw new UsernameAlreadyExistsException("testuser");
+        }
+
+        @GetMapping("/unauthorized-login")
+        public String unauthorizedLogin() {
+            throw new InvalidCredentialsException("Invalid username or password");
+        }
+
         @PostMapping("/validate")
         public String validate(@Valid @RequestBody Body body) {
             return "ok";
@@ -99,5 +109,19 @@ class GeneralExceptionHandlerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void usernameAlreadyExists_ReturnsConflictStatus() throws Exception {
+        mockMvc.perform(get("/username-conflict"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Username already exists: testuser"));
+    }
+
+    @Test
+    void invalidCredentials_ReturnsUnauthorizedStatus() throws Exception {
+        mockMvc.perform(get("/unauthorized-login"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Invalid Credentials: Invalid username or password"));
     }
 }

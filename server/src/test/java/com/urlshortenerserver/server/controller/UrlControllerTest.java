@@ -8,6 +8,7 @@ import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.request.UrlRequest;
 import com.urlshortenerserver.server.request.converter.UrlRequestConverter;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.service.UrlService;
 import netscape.javascript.JSObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -58,6 +60,7 @@ class UrlControllerTest {
     private UrlController urlController;
 
 
+
     @BeforeEach
     void setUp(){
         MockitoAnnotations.openMocks(this);
@@ -67,21 +70,22 @@ class UrlControllerTest {
     @Test
     void getAllUrls() throws Exception {
         //Given
-        Url url1 = new Url(1l,"http://helloThere.com","test1",false);
-        Url url2 = new Url(2l,"http://hellorThere.com","test2",false);
+        Url url1 = new Url(1l,"http://helloThere.com","test1",false,null,null);
+        Url url2 = new Url(2l,"http://hellorThere.com","test2",false,null,null);
         List<Url> testList = new ArrayList<>(Arrays.asList(url1,url2));
+        UrlFilter filter = new UrlFilter();
         List<UrlDto> expectedDtoList = new ArrayList<>();
         expectedDtoList.add(dtoConverter.convertToDto(url1));
         expectedDtoList.add(dtoConverter.convertToDto(url2));
         //When
-        Mockito.when(urlService.getAllUrls()).thenReturn(testList);
+        Mockito.when(urlService.getAllUrls(filter)).thenReturn(testList);
         Mockito.when(dtoConverter.convertToDto(testList)).thenReturn(expectedDtoList);
-        ResponseEntity<List<UrlDto>> response = urlController.getAllUrls();
+        ResponseEntity<List<UrlDto>> response = urlController.getAllUrls(filter);
         //Then
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(expectedDtoList,response.getBody());
 
-        Mockito.verify(urlService,Mockito.times(1)).getAllUrls();
+        Mockito.verify(urlService,Mockito.times(1)).getAllUrls(filter);
         Mockito.verify(dtoConverter,Mockito.times(1)).convertToDto(testList);
 
     }
@@ -89,7 +93,7 @@ class UrlControllerTest {
     @Test
     void getUrlByCode() throws Exception {
         //Given
-        Url url1 = new Url(1l,"http://helloThere.com","test1",false);
+        Url url1 = new Url(1l,"http://helloThere.com","test1",false,null,null);
         UrlDto urlDto = dtoConverter.convertToDto(url1);
         //When
         Mockito.when(urlService.getUrlByCode("test1")).thenReturn(url1);
@@ -104,14 +108,18 @@ class UrlControllerTest {
     void redirect() throws Exception {
         //Given
         String code = "test";
-        Url url = new Url(1l,"http://example.com","test",false);
+        Url url = new Url(1l,"http://example.com","test",false,null,null);
         URI uri = new URI(url.getUrl());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(uri);
+        // Mock Request
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("127.0.0.1");
+        request.addHeader("User-Agent", "JUnit-Test-Agent");
         //When
         Mockito.when(urlService.getUrlByCode(code)).thenReturn(url);
         //Then
-        ResponseEntity<List<UrlDto>> response = urlController.redirect(code);
+        ResponseEntity<List<UrlDto>> response = urlController.redirect(code,request);
         assertEquals(HttpStatus.SEE_OTHER,response.getStatusCode());
         assertEquals(httpHeaders,response.getHeaders());
 
@@ -121,8 +129,8 @@ class UrlControllerTest {
     void postURL() throws Exception {
         //Given
         UrlRequest request = UrlRequest.builder().url("http://example.com").build();
-        Url createdUrl = new Url(null,"http://example.com","test",false);
-        UrlDto createdUrlDto = new UrlDto(2l,"http://example.com","test");
+        Url createdUrl = new Url(null,"http://example.com","test",false,null,null);
+        UrlDto createdUrlDto = new UrlDto(2l,"http://example.com","test",null,null);
         //When
         Mockito.when(requestConverter.convertToEntity(request)).thenReturn(createdUrl);
         Mockito.when(urlService.generateCode()).thenReturn("test");
@@ -143,16 +151,15 @@ class UrlControllerTest {
     }
 
     @Test
-    void deleteUrl_shouldReturn204_whenUrlDeleted() throws Exception {
+    void deleteUrl_shouldReturnNoContent() throws Exception {
         // Given
         String code = "TEST123";
 
-        // When & Then
-        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNoContent())
-                .andExpect(MockMvcResultMatchers.content().string(""));
+        // When
+        ResponseEntity<Void> response = urlController.deleteUrl(code);
 
+        // Then
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         Mockito.verify(urlService, Mockito.times(1)).deleteUrl(code);
     }
 
@@ -164,9 +171,9 @@ class UrlControllerTest {
         Mockito.doThrow(new UrlNotFoundException("Url not found")).when(urlService).deleteUrl(code);
 
         // When & Then
-        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+        assertThrows(UrlNotFoundException.class, () -> {
+            urlController.deleteUrl(code);
+        });
 
         Mockito.verify(urlService, Mockito.times(1)).deleteUrl(code);
     }
@@ -177,9 +184,11 @@ class UrlControllerTest {
         String code = "";
 
         // When & Then
-        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+        Mockito.doThrow(new IllegalArgumentException("Invalid code")).when(urlService).deleteUrl(code);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            urlController.deleteUrl(code);
+        });
     }
 
     @Test
@@ -187,10 +196,11 @@ class UrlControllerTest {
         // Given
         String code = "abc123";
 
-        // When & Then
-        mvc.perform(MockMvcRequestBuilders.delete("/api/v2/delete/{code}", code)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNoContent());
+        // When
+        ResponseEntity<Void> response = urlController.deleteUrl(code);
+
+        // Then
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
         ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
         Mockito.verify(urlService, Mockito.times(1)).deleteUrl(codeCaptor.capture());

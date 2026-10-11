@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+import java.util.UUID;
+
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,4 +19,6 @@ public class UrlDto {
     private Long id;
     private String url;
     private String code;
+    private UUID userId;
+    private Instant createdAt;
 }

@@ -3,25 +3,35 @@ package com.urlshortenerserver.server.service;
 import com.urlshortenerserver.server.exception.CodeAlreadyExistsExceptiom;
 import com.urlshortenerserver.server.exception.UrlNotFoundException;
 import com.urlshortenerserver.server.model.Url;
+import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 
 class UrlServiceTest {
     @Mock
     private UrlRepository urlRepository;
+
+
+    @Mock
+    private ClickRepository clickRepository;
 
     @Mock
     private UrlService urlService;
@@ -33,37 +43,102 @@ class UrlServiceTest {
     @Mock
     private CacheService cacheService;
 
+    @Mock
+    private HttpServletRequest request;
+
     @BeforeEach
     void setUp(){
         idGenerator = Mockito.mock(IdGenerator.class);
         randomStringGenerator = Mockito.mock(RandomStringGenerator.class);
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn("NonExisting");
         MockitoAnnotations.openMocks(this);
-        urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator, cacheService);
+        urlService = new UrlService(urlRepository,randomStringGenerator,idGenerator, cacheService, clickRepository);
     }
 
     @Test
-    void getAllUrls_shouldReturnOnlyNonDeletedUrls() {
+    void getAllUrls_WithFilter_ReturnsFilteredUrls() {
         // Given
-        Url url1 = new Url(1L, "https://example1.com", "CODE1", false);
-        Url url2 = new Url(2L, "https://example2.com", "CODE2", false);
+        UrlFilter filter = new UrlFilter();
+        UUID userId = UUID.randomUUID();
+        filter.setUserId(userId);
 
-        Mockito.when(urlRepository.findAllByDeletedFalse()).thenReturn(java.util.Arrays.asList(url1, url2));
+        List<Url> expectedUrls = List.of(
+                new Url(1L, "http://example.com", "TEST", false, userId, null)
+        );
 
         // When
-        var result = urlService.getAllUrls();
+        Mockito.when(urlRepository.findAll(ArgumentMatchers.<Specification<Url>>any()))
+                .thenReturn(expectedUrls);
+
+        List<Url> resultUrls = urlService.getAllUrls(filter);
 
         // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.stream().noneMatch(Url::isDeleted));
-        Mockito.verify(urlRepository, Mockito.times(1)).findAllByDeletedFalse();
+        assertNotNull(resultUrls);
+        assertEquals(1, resultUrls.size());
+        assertEquals(expectedUrls, resultUrls);
+
+        // Verify repository was queried with a specification
+        Mockito.verify(urlRepository, Mockito.times(1))
+                .findAll(ArgumentMatchers.<Specification<Url>>any());
     }
 
+
+
+    @Test
+    void getAllUrls_WhenFilterIsNull_ReturnsNonDeletedUrls() {
+        // Given
+        List<Url> expectedUrls = List.of(
+                new Url(1L, "http://example.com", "TEST1", false, null, null)
+        );
+
+        // When
+        Mockito.when(urlRepository.findAll(ArgumentMatchers.<Specification<Url>>any()))
+                .thenReturn(expectedUrls);
+
+        List<Url> resultUrls = urlService.getAllUrls(null);
+
+        // Then
+        assertNotNull(resultUrls);
+        assertEquals(1, resultUrls.size());
+        assertEquals(expectedUrls, resultUrls);
+
+        // Verify repository was called with findAll using the specification
+        Mockito.verify(urlRepository, Mockito.times(1))
+                .findAll(ArgumentMatchers.<Specification<Url>>any());
+    }
+
+
+    @Test
+    void getAllUrls_WhenFilterIsNotNull_AppliesDeletedAndUserIdOrNullCriteria() {
+        // Given
+        UrlFilter filter = new UrlFilter();
+        UUID userId = UUID.randomUUID();
+        filter.setUserId(userId);
+
+        List<Url> expectedUrls = List.of(
+                new Url(1L, "http://example.com", "TEST2", false, userId, null),
+                new Url(2L, "http://example.org", "TEST3", false, null, null)
+        );
+
+        // When
+        Mockito.when(urlRepository.findAll(ArgumentMatchers.<Specification<Url>>any()))
+                .thenReturn(expectedUrls);
+
+        List<Url> resultUrls = urlService.getAllUrls(filter);
+
+        // Then
+        assertNotNull(resultUrls);
+        assertEquals(2, resultUrls.size());
+        assertEquals(expectedUrls, resultUrls);
+
+        // Verify repository search interaction
+        Mockito.verify(urlRepository, Mockito.times(1))
+                .findAll(ArgumentMatchers.<Specification<Url>>any());
+    }
     @Test
     void getUrlByCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com","TEST",false);
+        Url url1 = new Url(1l,"http://example.com","TEST",false,null,null);
         String code = "TEST";
         //When
         Mockito.when(urlRepository.findAllByCodeAndDeletedFalse("TEST")).thenReturn(Optional.of(url1));
@@ -95,7 +170,7 @@ class UrlServiceTest {
     void generateCode() {
         //Given
         String generatedCode = "generated";
-        Url testUrl = new Url(1l,"http://helloThere.com","generated",false);
+        Url testUrl = new Url(1l,"http://helloThere.com","generated",false,null,null);
         //When
         Mockito.when(urlRepository.findAllByCode(generatedCode)).thenReturn(Optional.of(testUrl));
         Mockito.when(urlRepository.findAllByCode("NonExisting")).thenReturn(Optional.empty());
@@ -121,7 +196,7 @@ class UrlServiceTest {
     @Test
     void createwithNoCode() {
         //Given
-        Url url1 = new Url(1l,"http://example.com",null,false);
+        Url url1 = new Url(1l,"http://example.com",null,false,null,null);
         String generatedTestCode = "GENERATED";
         //When
         Mockito.when(randomStringGenerator.generateRandomString()).thenReturn(generatedTestCode);
@@ -307,5 +382,33 @@ class UrlServiceTest {
         // Then
         assertEquals(6L, id);
         Mockito.verify(urlRepository, Mockito.times(1)).count();
+    }
+
+
+    @Test
+    void extractClientIp_WithXForwardedFor() {
+        // Given
+        Mockito.when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.195, 70.41.3.18");
+        Mockito.when(urlRepository.findByCode(any())).thenReturn(java.util.Optional.of(new Url()));
+
+        // When
+        urlService.recordClick("TEST", request);
+
+        // Then
+        Mockito.verify(clickRepository).save(argThat(click -> click.getIp().equals("203.0.113.195")));
+    }
+
+    @Test
+    void extractClientIp_WithoutXForwardedFor() {
+        // Given
+        Mockito.when(request.getHeader("X-Forwarded-For")).thenReturn(null);
+        Mockito.when(request.getRemoteAddr()).thenReturn("192.168.1.50");
+        Mockito.when(urlRepository.findByCode(any())).thenReturn(java.util.Optional.of(new Url()));
+
+        // When
+        urlService.recordClick("TEST", request);
+
+        // Then
+        Mockito.verify(clickRepository).save(argThat(click -> click.getIp().equals("192.168.1.50")));
     }
 }

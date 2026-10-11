@@ -2,6 +2,10 @@ package com.urlshortenerserver.server.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "url", indexes = {
@@ -19,10 +23,15 @@ public class Url {
     private String url;
     private String code;
 
-
-
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean deleted = false;
+
+    @Column(name = "user_id")
+    private UUID userId;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
 
     public Long getId() {
         return id;
@@ -55,4 +64,18 @@ public class Url {
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+
 }

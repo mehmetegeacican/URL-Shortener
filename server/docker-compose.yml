@@ -53,7 +53,17 @@ services:
       timeout: 5s
       retries: 5
       start_period: 40s
-
+  client:
+    build:
+      context: ../client/mobile
+      dockerfile: Dockerfile
+    container_name: url-shortener-client
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      app:
+        condition: service_healthy
 
 volumes:
   postgres_data:

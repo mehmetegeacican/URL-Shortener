@@ -13,6 +13,7 @@ import axios from 'axios';
 import { UrlList } from '@/components/ui/url-list';
 import { useFocusEffect } from 'expo-router';
 import { mapDeleteUrlError } from '@/utils/api.error';
+import { useUserContext } from '@/contexts/userContext';
 
 
 export default function TinyUrlsScreen() {
@@ -21,6 +22,7 @@ export default function TinyUrlsScreen() {
   const [error, setError] = useState<string | null>("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const {state} = useUserContext();
 
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
@@ -62,7 +64,9 @@ export default function TinyUrlsScreen() {
   const load = useCallback(async () => {
     try {
       setError(null);
-      setUrls(await urlService.getAllUrls());
+      setUrls(await urlService.getAllUrls({
+        userId:state.userId
+      }));
 
     } catch (e) {
       if (axios.isAxiosError(e)) {
@@ -75,7 +79,7 @@ export default function TinyUrlsScreen() {
         setError("Something went wrong");
       }
     }
-  }, []);
+  }, [state]);
 
   useFocusEffect(
     useCallback(() => {
