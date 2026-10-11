@@ -3,8 +3,8 @@ export interface AdminUrl {
   code: string;
   url: string;
   deleted: boolean;
-  ownerId: string | null;
-  ownerUsername: string | null;
+  userId: string | null;
+  username: string | null;
   createdAt: string | null; 
   clickCount: number;
   lastClickedAt: string | null; 

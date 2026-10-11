@@ -56,7 +56,7 @@ export function AdminUrlTable({ urls, onRestore, restoringCode }: AdminUrlTableP
           <ThemedView key={u.code} style={[styles.row, styles.divider]}>
             <Cell style={styles.code}>{u.code}</Cell>
             <Cell style={styles.url}>{u.url}</Cell>
-            <Cell style={styles.owner}>{u.ownerUsername ?? 'anonymous'}</Cell>
+            <Cell style={styles.owner}>{u.username ?? 'anonymous'}</Cell>
             <Cell style={[styles.status, u.deleted && styles.deleted]}>{u.deleted ? 'Deleted' : 'Active'}</Cell>
             <Cell style={styles.created}>{formatDate(u.createdAt)}</Cell>
             <Cell style={styles.clicks}>{u.clickCount}</Cell>
