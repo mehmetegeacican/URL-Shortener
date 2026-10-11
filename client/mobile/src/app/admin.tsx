@@ -26,10 +26,35 @@ function AdminScreen() {
     const [data, setData] = useState<PageResponse<AdminUrl> | null>(null);
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [restoringCode, setRestoringCode] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const {state} = useUserContext();
+    const { state } = useUserContext();
 
     const theme = useTheme();
+
+    const handleRestore = async (url: AdminUrl) => {
+        const token = state.token;
+        if (!token) {
+            setActionError('Log in as an admin to do this.');
+            return;
+        }
+
+        try {
+            setActionError(null);
+            setRestoringCode(url.code);
+            await adminService.restoreUrl(token, url.code);
+            setData((prev) =>
+                prev
+                    ? { ...prev, content: prev.content.map((u) => (u.code === url.code ? { ...u, deleted: false } : u)) }
+                    : prev
+            );
+        } catch (e) {
+            setActionError(mapAdminError(e));
+        } finally {
+            setRestoringCode(null);
+        }
+    };
 
     const load = useCallback(async (pageToLoad: number) => {
         const token = state.token;
@@ -55,7 +80,7 @@ function AdminScreen() {
     useFocusEffect(
         useCallback(() => {
             load(page);
-        }, [load, page])
+        }, [load, page,state])
     );
 
     const lastPage = data ? Math.max(data.totalPages - 1, 0) : 0;
@@ -80,7 +105,7 @@ function AdminScreen() {
                             <ThemedText style={styles.errorText}>{error}</ThemedText>
                         ) : data ? (
                             <>
-                                <AdminUrlTable urls={data.content} />
+                                <AdminUrlTable urls={data.content} onRestore={handleRestore} restoringCode={restoringCode} />
                                 <ThemedView style={styles.pagination}>
                                     <PageButton label="Previous" disabled={page === 0} onPress={() => setPage((p) => p - 1)} />
                                     <ThemedText type="small" themeColor="textSecondary">

@@ -20,4 +20,9 @@ export const adminService = {
     });
     return response.data;
   },
+  async restoreUrl(token: string, code: string): Promise<void> {
+    await api.post(`/admin/urls/${encodeURIComponent(code)}/restore`, undefined, {
+      headers: authHeaders(token),
+    });
+  },
 };
