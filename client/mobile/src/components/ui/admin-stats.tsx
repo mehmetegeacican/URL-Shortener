@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -79,7 +79,7 @@ export function AdminStatsTables({ stats }: { stats: AdminStats }) {
     ];
 
     return (
-        <ThemedView style={styles.container}>
+        <View style={styles.grid}>
             <DataTable
                 title="Overview"
                 columns={[
@@ -88,18 +88,7 @@ export function AdminStatsTables({ stats }: { stats: AdminStats }) {
                 ]}
                 rows={overview}
             />
-
-            <DataTable
-                title="Top URLs"
-                columns={[
-                    { label: 'Code', flex: 1 },
-                    { label: 'URL', flex: 3 },
-                    { label: 'Clicks', flex: 1, alignRight: true },
-                ]}
-                rows={stats.topUrls.map((u) => [u.code, u.url, u.clicks])}
-                emptyText="No clicks recorded yet."
-            />
-
+ 
             <DataTable
                 title="Top IPs"
                 columns={[
@@ -109,7 +98,7 @@ export function AdminStatsTables({ stats }: { stats: AdminStats }) {
                 rows={stats.topIps.map((p) => [p.ip, p.clicks])}
                 emptyText="No clicks recorded yet."
             />
-
+ 
             <DataTable
                 title="Clicks per day"
                 columns={[
@@ -119,16 +108,28 @@ export function AdminStatsTables({ stats }: { stats: AdminStats }) {
                 rows={stats.clicksPerDay.map((d) => [d.date, d.clicks])}
                 emptyText="No clicks recorded yet."
             />
-        </ThemedView>
+        </View>
+
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: Spacing.four,
     },
     table: {
+        flexGrow: 1,
+        flexBasis: 280,
         gap: Spacing.two,
+        padding: Spacing.three,
+        borderRadius: Spacing.three,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: 'rgba(128,128,128,0.25)',
+    },
+    container: {
+        gap: Spacing.four,
     },
     row: {
         flexDirection: 'row',
