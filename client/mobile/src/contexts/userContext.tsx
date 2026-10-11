@@ -7,11 +7,12 @@ export interface UserState {
     token: string;
     userId: string;
     isAuthenticated: boolean;
+    isAdmin:boolean;
 }
 
 // 2. User Actions
 export type UserAction =
-    { type: 'LOGIN'; payload: { username: string; token: string, userId: string } }
+    { type: 'LOGIN'; payload: { username: string; token: string, userId: string, admin:boolean } }
     | { type: 'LOGOUT' }
     | { type: 'UPDATE_PROFILE'; payload: Partial<UserState> };
 
@@ -29,7 +30,8 @@ const initialState: UserState = {
     username: '',
     token: '',
     userId: '',
-    isAuthenticated: false
+    isAuthenticated: false,
+    isAdmin:false
 };
 
 // 6. Reducer , strict typing
@@ -42,7 +44,8 @@ function userReducer(state: UserState, action: UserAction): UserState {
                 username: action.payload.username,
                 userId: action.payload.userId,
                 token: action.payload.token,
-                isAuthenticated: true
+                isAuthenticated: true,
+                isAdmin: action.payload.admin
             };
         case 'LOGOUT':
             return initialState;
