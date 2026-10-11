@@ -2,17 +2,14 @@ package com.urlshortenerserver.server.repository.specifications;
 
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.request.filter.UrlFilter;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UrlSpecificationsTest {
@@ -110,5 +107,47 @@ class UrlSpecificationsTest {
 
         // Then
         assertNull(predicate);
+    }
+    @Test
+    void hasUserIdOrNull_WhenUserIdIsNotNull_ReturnsOrPredicate() {
+        // Given
+        UUID userId = UUID.randomUUID();
+        Specification<Url> spec = UrlSpecifications.hasUserIdOrNull(userId);
+
+        Path<Object> userPath = Mockito.mock(Path.class);
+        Predicate equalsPredicate = Mockito.mock(Predicate.class);
+        Predicate isNullPredicate = Mockito.mock(Predicate.class);
+        Predicate orPredicate = Mockito.mock(Predicate.class);
+
+        Mockito.when(root.get("userId")).thenReturn(userPath);
+        Mockito.when(criteriaBuilder.equal(userPath, userId)).thenReturn(equalsPredicate);
+        Mockito.when(criteriaBuilder.isNull(userPath)).thenReturn(isNullPredicate);
+        Mockito.when(criteriaBuilder.or(equalsPredicate, isNullPredicate)).thenReturn(orPredicate);
+
+        // When
+        Predicate predicate = spec.toPredicate(root, query, criteriaBuilder);
+
+        // Then
+        assertNotNull(predicate);
+        assertEquals(orPredicate, predicate);
+    }
+
+    @Test
+    void hasUserIdOrNull_WhenUserIdIsNull_ReturnsIsNullPredicate() {
+        // Given
+        Specification<Url> spec = UrlSpecifications.hasUserIdOrNull(null);
+        Path<Object> userPath = Mockito.mock(Path.class);
+        Predicate isNullPredicate = Mockito.mock(Predicate.class);
+
+        Mockito.when(root.get("userId")).thenReturn(userPath);
+        Mockito.when(criteriaBuilder.isNull(userPath)).thenReturn(isNullPredicate);
+
+        // When
+        Predicate predicate = spec.toPredicate(root, query, criteriaBuilder);
+
+        // Then
+        assertNotNull(predicate);
+        assertEquals(isNullPredicate, predicate);
+        Mockito.verify(criteriaBuilder).isNull(userPath);
     }
 }
