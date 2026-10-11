@@ -8,9 +8,10 @@ import { AdminUrlTable } from '@/components/ui/admin-url-table';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { adminService } from '@/service/admin.service';
-import { AdminUrl, PageResponse } from '@/types/admin.type';
+import { AdminStats, AdminUrl, PageResponse } from '@/types/admin.type';
 import { mapAdminError } from '@/utils/admin.error';
 import { useUserContext } from '@/contexts/userContext';
+import { AdminStatsTables } from '@/components/ui/admin-stats';
 
 const PAGE_SIZE = 10;
 
@@ -30,6 +31,10 @@ function AdminScreen() {
     const [actionError, setActionError] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const { state } = useUserContext();
+
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [statsError, setStatsError] = useState<string | null>(null);
 
     const theme = useTheme();
 
@@ -74,13 +79,37 @@ function AdminScreen() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [state]);
+
+    const loadStats = useCallback(async () => {
+        const token = state.token;
+        if (!token) {
+            setStatsError('Log in as an admin to see this page.');
+            setStatsLoading(false);
+            return;
+        }
+
+        try {
+            setStatsError(null);
+            setStats(await adminService.getStats(token));
+        } catch (e) {
+            setStatsError(mapAdminError(e));
+        } finally {
+            setStatsLoading(false);
+        }
+    }, [state]);
 
     // Runs when the screen gains focus and again whenever the page number changes
     useFocusEffect(
         useCallback(() => {
             load(page);
-        }, [load, page,state])
+        }, [load, page, state])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            loadStats();
+        }, [loadStats])
     );
 
     const lastPage = data ? Math.max(data.totalPages - 1, 0) : 0;
@@ -114,6 +143,15 @@ function AdminScreen() {
                                     <PageButton label="Next" disabled={page >= lastPage} onPress={() => setPage((p) => p + 1)} />
                                 </ThemedView>
                             </>
+                        ) : null}
+                    </Collapsible>
+                    <Collapsible title="Stats">
+                        {statsLoading ? (
+                            <ActivityIndicator size="large" />
+                        ) : statsError ? (
+                            <ThemedText style={styles.errorText}>{statsError}</ThemedText>
+                        ) : stats ? (
+                            <AdminStatsTables stats={stats} />
                         ) : null}
                     </Collapsible>
                 </ThemedView>

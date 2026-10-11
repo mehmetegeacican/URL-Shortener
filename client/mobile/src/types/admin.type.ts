@@ -21,7 +21,6 @@ export interface PageResponse<T> {
 
 export type AdminUrlStatus = 'active' | 'deleted' | 'all';
 
-// Every field is optional; the backend applies its own defaults
 export interface AdminUrlQuery {
   page?: number;
   size?: number;
@@ -30,4 +29,48 @@ export interface AdminUrlQuery {
   userId?: string;
   sort?: 'id' | 'code';
   direction?: 'asc' | 'desc';
+}
+
+export interface UrlStats {
+  total: number;
+  active: number;
+  deleted: number;
+  anonymous: number;
+  createdToday: number;
+}
+ 
+export interface UserStats {
+  total: number;
+  admins: number;
+}
+ 
+export interface ClickStats {
+  total: number;
+  today: number;
+  uniqueIps: number;
+}
+ 
+export interface TopUrl {
+  code: string;
+  url: string;
+  clicks: number;
+}
+ 
+export interface TopIp {
+  ip: string;
+  clicks: number;
+}
+ 
+export interface DailyClicks {
+  date: string; // yyyy-MM-dd
+  clicks: number;
+}
+ 
+export interface AdminStats {
+  urls: UrlStats;
+  users: UserStats;
+  clicks: ClickStats;
+  topUrls: TopUrl[];
+  topIps: TopIp[];
+  clicksPerDay: DailyClicks[];
 }
