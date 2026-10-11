@@ -38,10 +38,6 @@ export function AdminUrlTable({ urls, onRestore, restoringCode }: AdminUrlTableP
     );
   }
 
-  useEffect(() => {
-    console.log(urls)
-  },[urls])
-
   return (
     <ThemedView>
       <ThemedView type="backgroundElement" style={styles.row}>
