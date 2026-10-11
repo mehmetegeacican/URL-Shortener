@@ -17,8 +17,8 @@ public class AdminUrlResponse {
     String code;
     String url;
     boolean deleted;
-    UUID ownerId;
-    String ownerUsername;
+    UUID userId;
+    String username;
     Instant createdAt;
     long clickCount;
     Instant lastClickedAt;

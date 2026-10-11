@@ -3,6 +3,7 @@ package com.urlshortenerserver.server.service;
 
 import com.urlshortenerserver.server.model.Click;
 import com.urlshortenerserver.server.model.Url;
+import com.urlshortenerserver.server.model.User;
 import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
 import com.urlshortenerserver.server.repository.UserRepository;
@@ -26,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Optional;
 
 @Service
 public class AdminService implements IAdminService {
@@ -54,10 +56,24 @@ public class AdminService implements IAdminService {
     }
 
     private AdminUrlResponse toResponse(Url url) {
+        String username = null;
+        long totalClicks = clickRepository.countByCode(url.getCode());
+
+
+        if (url.getUserId() != null) {
+            Optional<User> userFetch = userRepository.findById(url.getUserId());
+            if (userFetch.isPresent()) {
+                username = userFetch.get().getUsername();
+            }
+        }
         return AdminUrlResponse.builder()
                 .code(url.getCode())
                 .url(url.getUrl())
+                .userId(url.getUserId())
+                .username(username)
                 .deleted(url.isDeleted())
+                .createdAt(url.getCreatedAt())
+                .clickCount(totalClicks)
                 .build();
     }
 
