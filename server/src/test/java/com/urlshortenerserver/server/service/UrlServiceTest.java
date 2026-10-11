@@ -5,16 +5,21 @@ import com.urlshortenerserver.server.exception.UrlNotFoundException;
 import com.urlshortenerserver.server.model.Url;
 import com.urlshortenerserver.server.repository.ClickRepository;
 import com.urlshortenerserver.server.repository.UrlRepository;
+import com.urlshortenerserver.server.request.filter.UrlFilter;
 import com.urlshortenerserver.server.util.IdGenerator;
 import com.urlshortenerserver.server.util.RandomStringGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,23 +56,85 @@ class UrlServiceTest {
     }
 
     @Test
-    void getAllUrls_shouldReturnOnlyNonDeletedUrls() {
+    void getAllUrls_WithFilter_ReturnsFilteredUrls() {
         // Given
-        Url url1 = new Url(1L, "https://example1.com", "CODE1", false,null,null);
-        Url url2 = new Url(2L, "https://example2.com", "CODE2", false,null,null);
+        UrlFilter filter = new UrlFilter();
+        UUID userId = UUID.randomUUID();
+        filter.setUserId(userId);
 
-        Mockito.when(urlRepository.findAllByDeletedFalse()).thenReturn(java.util.Arrays.asList(url1, url2));
+        List<Url> expectedUrls = List.of(
+                new Url(1L, "http://example.com", "TEST", false, userId, null)
+        );
 
         // When
-        var result = urlService.getAllUrls();
+        Mockito.when(urlRepository.findAll(ArgumentMatchers.<Specification<Url>>any()))
+                .thenReturn(expectedUrls);
+
+        List<Url> resultUrls = urlService.getAllUrls(filter);
 
         // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.stream().noneMatch(Url::isDeleted));
-        Mockito.verify(urlRepository, Mockito.times(1)).findAllByDeletedFalse();
+        assertNotNull(resultUrls);
+        assertEquals(1, resultUrls.size());
+        assertEquals(expectedUrls, resultUrls);
+
+        // Verify repository was queried with a specification
+        Mockito.verify(urlRepository, Mockito.times(1))
+                .findAll(ArgumentMatchers.<Specification<Url>>any());
     }
 
+
+
+    @Test
+    void getAllUrls_WhenFilterIsNull_ReturnsNonDeletedUrls() {
+        // Given
+        List<Url> expectedUrls = List.of(
+                new Url(1L, "http://example.com", "TEST1", false, null, null)
+        );
+
+        // When
+        Mockito.when(urlRepository.findAll(ArgumentMatchers.<Specification<Url>>any()))
+                .thenReturn(expectedUrls);
+
+        List<Url> resultUrls = urlService.getAllUrls(null);
+
+        // Then
+        assertNotNull(resultUrls);
+        assertEquals(1, resultUrls.size());
+        assertEquals(expectedUrls, resultUrls);
+
+        // Verify repository was called with findAll using the specification
+        Mockito.verify(urlRepository, Mockito.times(1))
+                .findAll(ArgumentMatchers.<Specification<Url>>any());
+    }
+
+
+    @Test
+    void getAllUrls_WhenFilterIsNotNull_AppliesDeletedAndUserIdOrNullCriteria() {
+        // Given
+        UrlFilter filter = new UrlFilter();
+        UUID userId = UUID.randomUUID();
+        filter.setUserId(userId);
+
+        List<Url> expectedUrls = List.of(
+                new Url(1L, "http://example.com", "TEST2", false, userId, null),
+                new Url(2L, "http://example.org", "TEST3", false, null, null)
+        );
+
+        // When
+        Mockito.when(urlRepository.findAll(ArgumentMatchers.<Specification<Url>>any()))
+                .thenReturn(expectedUrls);
+
+        List<Url> resultUrls = urlService.getAllUrls(filter);
+
+        // Then
+        assertNotNull(resultUrls);
+        assertEquals(2, resultUrls.size());
+        assertEquals(expectedUrls, resultUrls);
+
+        // Verify repository search interaction
+        Mockito.verify(urlRepository, Mockito.times(1))
+                .findAll(ArgumentMatchers.<Specification<Url>>any());
+    }
     @Test
     void getUrlByCode() {
         //Given
