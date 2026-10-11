@@ -21,12 +21,12 @@ export default function AppTabs() {
 
   const handlelogout = async () => {
     dispatch({
-      type:'LOGOUT'
+      type: 'LOGOUT'
     });
     await AsyncStorage.removeItem('user');
   }
 
- 
+
 
   return (
     <Tabs>
@@ -35,6 +35,9 @@ export default function AppTabs() {
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
+          </TabTrigger>
+          <TabTrigger name="admin" href="/admin" asChild>
+            <TabButton hidden={!(state.isAdmin && state.isAuthenticated)}>Admin</TabButton>
           </TabTrigger>
           <TabTrigger name="tiny-urls" href="/tinyUrls" asChild>
             <TabButton>TinyUrls</TabButton>
@@ -51,6 +54,7 @@ export default function AppTabs() {
           <TabTrigger name="signup" href="/signup" asChild>
             <TabButton hidden>Sign up</TabButton>
           </TabTrigger>
+          
         </CustomTabList>
       </TabList>
     </Tabs>

@@ -56,6 +56,7 @@ export default function SignupScreen() {
                 userId: result.userId,
                 username: result.username,
                 token: result.token,
+                admin: result.admin
             };
             dispatch({
                 type: 'LOGIN',

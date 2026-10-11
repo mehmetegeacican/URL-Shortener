@@ -13,6 +13,7 @@ const authHeaders = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 export const adminService = {
   async getUrls(token: string, query: AdminUrlQuery = {}): Promise<PageResponse<AdminUrl>> {
+    console.log(authHeaders(token))
     const response = await api.get<PageResponse<AdminUrl>>('/admin/urls/all', {
       params: { ...query, search: query.search?.trim() || undefined },
       headers: authHeaders(token),

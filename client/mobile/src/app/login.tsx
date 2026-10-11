@@ -51,6 +51,7 @@ export default function LoginScreen() {
                 userId: result.userId,
                 username: result.username,
                 token: result.token,
+                admin: result.admin
             };
             dispatch({
                 type: 'LOGIN',
