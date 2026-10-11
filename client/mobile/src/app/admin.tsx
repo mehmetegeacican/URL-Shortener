@@ -152,6 +152,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.three,
         paddingVertical: Spacing.one,
         borderRadius: Spacing.three,
+        marginHorizontal: Spacing.two,
+        marginVertical: Spacing.one,
     },
     disabled: {
         opacity: 0.4,
