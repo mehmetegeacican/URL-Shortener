@@ -3,6 +3,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Declare build argument for the backend URL
+ARG EXPO_PUBLIC_API_URL
+ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
+
+
+
 # 1. Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm ci
@@ -12,6 +18,7 @@ COPY . .
 
 # 3. Build for production web target
 RUN npx expo export --platform web
+
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
