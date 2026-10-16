@@ -51,7 +51,6 @@ export default function SignupScreen() {
         setLoading(true);
         try {
             const result = await userService.signUp(username.trim(), password);
-            // TODO (next step): sign-up also logs the user in, so the response contains the JWT; save it before navigating
             const signedUpUser = {
                 userId: result.userId,
                 username: result.username,

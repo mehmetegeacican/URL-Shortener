@@ -1,0 +1,47 @@
+name: Client CI/CD
+
+on:
+  push:
+    branches: [master]
+    paths: ['client/mobile/**', '.github/workflows/client.yml']
+  pull_request:
+    paths: ['client/mobile/**']
+
+concurrency:
+  group: client-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client/mobile
+    env:
+      EXPO_PUBLIC_API_URL: https://example.invalid/api/v2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: client/mobile/package-lock.json
+
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Export web build
+        run: npx expo export --platform web
+
+      - name: Trigger Frontend Deploy Hook
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          if [ -n "${{ secrets.FRONTEND_DEPLOY_HOOK_URL }}" ]; then
+            echo "Triggering Frontend deployment..."
+            curl -X POST "${{ secrets.FRONTEND_DEPLOY_HOOK_URL }}"
+          else
+            echo "FRONTEND_DEPLOY_HOOK_URL is not set or using native Vercel GitHub integration."
+          fi
