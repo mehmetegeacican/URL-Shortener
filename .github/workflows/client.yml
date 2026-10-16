@@ -1,4 +1,4 @@
-name: Client CI
+name: Client CI/CD
 
 on:
   push:
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,3 +35,13 @@ jobs:
 
       - name: Export web build
         run: npx expo export --platform web
+
+      - name: Trigger Frontend Deploy Hook
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          if [ -n "${{ secrets.FRONTEND_DEPLOY_HOOK_URL }}" ]; then
+            echo "Triggering Frontend deployment..."
+            curl -X POST "${{ secrets.FRONTEND_DEPLOY_HOOK_URL }}"
+          else
+            echo "FRONTEND_DEPLOY_HOOK_URL is not set or using native Vercel GitHub integration."
+          fi
