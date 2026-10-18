@@ -90,4 +90,16 @@ npm install
 npx expo start
 ```
 
+---
+
+## Live Demos
+
+<div align="center">
+
+[![Main Server](https://img.shields.io/badge/Backend_API-Live-success?style=for-the-badge&logo=render&logoColor=white)](https://url-shortener-z2ze.onrender.com)
+[![Client](https://img.shields.io/badge/Frontend_Client-Live-blue?style=for-the-badge&logo=render&logoColor=white)](https://url-shortener-client-xd51.onrender.com)
+
+</div>
+
+---
 
